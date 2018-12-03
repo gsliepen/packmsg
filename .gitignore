@@ -1,0 +1,11 @@
+.*
+!.gitignore
+*.gch
+*.o
+core
+core.*
+/benchmark
+/example
+/test
+
+

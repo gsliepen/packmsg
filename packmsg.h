@@ -258,8 +258,20 @@ static inline void packmsg_add_bin(struct packmsg_output *buf, const void *data,
 static inline void packmsg_add_ext(struct packmsg_output *buf, int8_t type, const void *data, uint32_t dlen)
 {
 	if (dlen <= 0xff) {
-		packmsg_write_hdrdata_(buf, 0xc7, &dlen, 1);
-		packmsg_write_data_(buf, &type, 1);
+		if (dlen == 16) {
+			packmsg_write_hdrdata_(buf, 0xd8, &type, 1);
+		} else if (dlen == 8) {
+			packmsg_write_hdrdata_(buf, 0xd7, &type, 1);
+		} else if (dlen == 4) {
+			packmsg_write_hdrdata_(buf, 0xd6, &type, 1);
+		} else if (dlen == 2) {
+			packmsg_write_hdrdata_(buf, 0xd5, &type, 1);
+		} else if (dlen == 1) {
+			packmsg_write_hdrdata_(buf, 0xd4, &type, 1);
+		} else {
+			packmsg_write_hdrdata_(buf, 0xc7, &dlen, 1);
+			packmsg_write_data_(buf, &type, 1);
+		}
 	} else if (dlen <= 0xffff) {
 		packmsg_write_hdrdata_(buf, 0xc8, &dlen, 2);
 		packmsg_write_data_(buf, &type, 1);
@@ -730,6 +742,8 @@ static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t *ty
 		packmsg_read_data_(buf, &dlen, 2);
 	} else if (hdr == 0xc9) {
 		packmsg_read_data_(buf, &dlen, 4);
+	} else if (hdr >= 0xd4 && hdr <= 0xd8) {
+		dlen = 1 << (hdr - 0xd4);
 	} else {
 		buf->len = -1;
 		*type = 0;
@@ -1092,11 +1106,11 @@ static inline enum packmsg_type packmsg_get_type(struct packmsg_input *buf) {
 		case 0x1: return PACKMSG_INT16;
 		case 0x2: return PACKMSG_INT32;
 		case 0x3: return PACKMSG_INT64;
-		case 0x4: return PACKMSG_FIXEXT1;
-		case 0x5: return PACKMSG_FIXEXT2;
-		case 0x6: return PACKMSG_FIXEXT4;
-		case 0x7: return PACKMSG_FIXEXT8;
-		case 0x8: return PACKMSG_FIXEXT16;
+		case 0x4:
+		case 0x5:
+		case 0x6:
+		case 0x7:
+		case 0x8: return PACKMSG_EXT;
 		case 0x9:
 		case 0xa:
 		case 0xb: return PACKMSG_STR;

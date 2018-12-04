@@ -299,11 +299,11 @@ END_TEST
 
 START_TEST(add_fixext)
 {
-	TEST_OUTPUT(packmsg_add_fixext1(&out, 1, ":"), "\xd4\x01:", 3);
-	TEST_OUTPUT(packmsg_add_fixext2(&out, 2, ":f"), "\xd5\x02:f", 4);
-	TEST_OUTPUT(packmsg_add_fixext4(&out, 3, ":fix"), "\xd6\x03:fix", 6);
-	TEST_OUTPUT(packmsg_add_fixext8(&out, 4, ":fixext8"), "\xd7\x04:fixext8", 10);
-	TEST_OUTPUT(packmsg_add_fixext16(&out, 5, ":fixext16fixext16"), "\xd8\x05:fixext16fixext16", 18);
+	TEST_OUTPUT(packmsg_add_ext(&out, 1, ":", 1),                  "\xd4\x01:", 3);
+	TEST_OUTPUT(packmsg_add_ext(&out, 2, ":f", 2),                 "\xd5\x02:f", 4);
+	TEST_OUTPUT(packmsg_add_ext(&out, 3, ":fix", 4),               "\xd6\x03:fix", 6);
+	TEST_OUTPUT(packmsg_add_ext(&out, 4, ":fixext8", 8),           "\xd7\x04:fixext8", 10);
+	TEST_OUTPUT(packmsg_add_ext(&out, 5, ":fixext16fixext16", 16), "\xd8\x05:fixext16fixext16", 18);
 }
 END_TEST
 
@@ -346,9 +346,9 @@ START_TEST(add_ext)
         TEST_OUTPUT(packmsg_add_ext(&out, 1, ext + 3, 0), ext, 3);
 
 	ext[0] = 0xc7;
-	ext[1] = 0x01;
+	ext[1] = 0x03;
 	ext[2] = 0x02;
-        TEST_OUTPUT(packmsg_add_ext(&out, 2, ext + 3, 0x1), ext, 3 + 0x1);
+        TEST_OUTPUT(packmsg_add_ext(&out, 2, ext + 3, 0x3), ext, 3 + 0x3);
 
 	ext[0] = 0xc7;
 	ext[1] = 0xff;
@@ -1062,16 +1062,16 @@ END_TEST
 #define TEST_INPUT_FIXEXT(size, ext, data) {\
 	const char *buf = data;\
 	struct packmsg_input in1 = {(uint8_t *)buf, size + 2};\
-	char outbuf[size + 64];\
-	memcpy(outbuf + size, "Canary!", 8);\
-	ck_assert_int_eq(packmsg_get_fixext ## size(&in1, outbuf), ext);\
+	const void *rawptr;\
+	int8_t type;\
+	ck_assert_int_eq(packmsg_get_ext_raw(&in1, &type, &rawptr), size);\
 	ck_assert(packmsg_done(&in1));\
-	ck_assert_mem_eq(outbuf, buf + 2, size);\
-	ck_assert_mem_eq(outbuf + size, "Canary!", 8);\
+	ck_assert_ptr_nonnull(rawptr);\
+	ck_assert_mem_eq(rawptr, buf + 2, size);\
 	struct packmsg_input in2 = {(uint8_t *)buf, size + 1};\
-	memcpy(outbuf, "Canary!", 8);\
-	ck_assert_int_eq(packmsg_get_fixext ## size(&in2, outbuf), 0);\
-	ck_assert_mem_eq(outbuf, "Canary!", 8);\
+	ck_assert_int_eq(packmsg_get_ext_raw(&in2, &type, &rawptr), 0);\
+	ck_assert_int_eq(type, 0);\
+	ck_assert_ptr_null(rawptr);\
 	ck_assert(!packmsg_done(&in2));\
 }
 

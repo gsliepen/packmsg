@@ -823,7 +823,6 @@ enum packmsg_type {
 	PACKMSG_NIL,
 	PACKMSG_BOOL,
 	PACKMSG_POSITIVE_FIXINT,
-	PACKMSG_NEGATIVE_FIXINT,
 	PACKMSG_INT8,
 	PACKMSG_INT16,
 	PACKMSG_INT32,
@@ -997,7 +996,7 @@ static inline enum packmsg_type packmsg_get_type(struct packmsg_input *buf) {
 		default: return PACKMSG_ERROR;
 		}
 	case 0xe:
-	case 0xf: return PACKMSG_NEGATIVE_FIXINT;
+	case 0xf: return PACKMSG_INT8;
 	default: return PACKMSG_ERROR;
 	}
 }

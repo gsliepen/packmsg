@@ -42,7 +42,6 @@ static void decode_scalar(struct packmsg_input *in) {
 		printf(packmsg_get_bool(in) ? "true" : "false");
 		return;
 	case PACKMSG_POSITIVE_FIXINT:
-	case PACKMSG_NEGATIVE_FIXINT:
 	case PACKMSG_INT8:
 	case PACKMSG_INT16:
 	case PACKMSG_INT32:

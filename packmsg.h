@@ -570,6 +570,8 @@ static inline double packmsg_get_double(struct packmsg_input *buf)
 
 static inline uint32_t packmsg_get_str_raw(struct packmsg_input *buf, const char **str)
 {
+	assert(str);
+
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	uint32_t slen = 0;
 
@@ -620,7 +622,6 @@ static inline char *packmsg_get_str_dup(struct packmsg_input *buf)
 
 static inline uint32_t packmsg_get_str_copy(struct packmsg_input *buf, void *data, uint32_t dlen)
 {
-	assert(buf);
 	assert(data);
 
 	const char *str;
@@ -645,6 +646,8 @@ static inline uint32_t packmsg_get_str_copy(struct packmsg_input *buf, void *dat
 
 static inline uint32_t packmsg_get_bin_raw(struct packmsg_input *buf, const void **data)
 {
+	assert(data);
+
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	uint32_t dlen = 0;
 
@@ -692,7 +695,7 @@ static inline void *packmsg_get_bin_dup(struct packmsg_input *buf)
 
 static inline uint32_t packmsg_get_bin_copy(struct packmsg_input *buf, void *rawbuf, uint32_t rlen)
 {
-	assert(buf);
+	assert(rawbuf);
 
 	const void *data;
 	uint32_t dlen = packmsg_get_bin_raw(buf, &data);
@@ -709,7 +712,7 @@ static inline uint32_t packmsg_get_bin_copy(struct packmsg_input *buf, void *raw
 	}
 }
 
-static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t * type, const void **data)
+static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t *type, const void **data)
 {
 	assert(type);
 	assert(data);
@@ -747,6 +750,8 @@ static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t * t
 
 static inline void *packmsg_get_ext_dup(struct packmsg_input *buf, int8_t * type)
 {
+	assert(type);
+
 	const void *data;
 	uint32_t dlen = packmsg_get_ext_raw(buf, type, &data);
 	if (likely(packmsg_input_ok(buf))) {
@@ -764,9 +769,10 @@ static inline void *packmsg_get_ext_dup(struct packmsg_input *buf, int8_t * type
 	}
 }
 
-static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t * type, void *rawbuf, uint32_t rlen)
+static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t *type, void *rawbuf, uint32_t rlen)
 {
-	assert(buf);
+	assert(type);
+	assert(rawbuf);
 
 	const void *data;
 	uint32_t dlen = packmsg_get_ext_raw(buf, type, &data);
@@ -786,6 +792,8 @@ static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t * 
 
 static inline int8_t packmsg_get_fixext1(struct packmsg_input *buf, void *data)
 {
+	assert(data);
+
 	if (packmsg_read_hdr_(buf) != 0xd4) {
 		buf->len = -1;
 		return 0;
@@ -798,6 +806,8 @@ static inline int8_t packmsg_get_fixext1(struct packmsg_input *buf, void *data)
 
 static inline int8_t packmsg_get_fixext2(struct packmsg_input *buf, void *data)
 {
+	assert(data);
+
 	if (packmsg_read_hdr_(buf) != 0xd5) {
 		buf->len = -1;
 		return 0;
@@ -810,6 +820,8 @@ static inline int8_t packmsg_get_fixext2(struct packmsg_input *buf, void *data)
 
 static inline int8_t packmsg_get_fixext4(struct packmsg_input *buf, void *data)
 {
+	assert(data);
+
 	if (packmsg_read_hdr_(buf) != 0xd6) {
 		buf->len = -1;
 		return 0;
@@ -822,6 +834,8 @@ static inline int8_t packmsg_get_fixext4(struct packmsg_input *buf, void *data)
 
 static inline int8_t packmsg_get_fixext8(struct packmsg_input *buf, void *data)
 {
+	assert(data);
+
 	if (packmsg_read_hdr_(buf) != 0xd7) {
 		buf->len = -1;
 		return 0;
@@ -834,6 +848,8 @@ static inline int8_t packmsg_get_fixext8(struct packmsg_input *buf, void *data)
 
 static inline int8_t packmsg_get_fixext16(struct packmsg_input *buf, void *data)
 {
+	assert(data);
+
 	if (packmsg_read_hdr_(buf) != 0xd8) {
 		buf->len = -1;
 		return 0;

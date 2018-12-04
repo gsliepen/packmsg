@@ -900,6 +900,35 @@ static inline uint32_t packmsg_get_array(struct packmsg_input *buf)
 
 /* Type checking */
 
+enum packmsg_type {
+	PACKMSG_ERROR,
+	PACKMSG_NIL,
+	PACKMSG_BOOL,
+	PACKMSG_POSITIVE_FIXINT,
+	PACKMSG_NEGATIVE_FIXINT,
+	PACKMSG_INT8,
+	PACKMSG_INT16,
+	PACKMSG_INT32,
+	PACKMSG_INT64,
+	PACKMSG_UINT8,
+	PACKMSG_UINT16,
+	PACKMSG_UINT32,
+	PACKMSG_UINT64,
+	PACKMSG_FLOAT,
+	PACKMSG_DOUBLE,
+	PACKMSG_STR,
+	PACKMSG_BIN,
+	PACKMSG_EXT,
+	PACKMSG_FIXEXT1,
+	PACKMSG_FIXEXT2,
+	PACKMSG_FIXEXT4,
+	PACKMSG_FIXEXT8,
+	PACKMSG_FIXEXT16,
+	PACKMSG_MAP,
+	PACKMSG_ARRAY,
+	PACKMSG_DONE,
+};
+
 static inline bool packmsg_is_nil(struct packmsg_input *buf)
 {
 	return packmsg_peek_hdr_(buf) == 0xc0;
@@ -1014,6 +1043,69 @@ static inline bool packmsg_is_array(struct packmsg_input *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return (hdr & 0xf0) == 0x90 || hdr == 0xdc || hdr == 0xdd;
+}
+
+static inline enum packmsg_type packmsg_get_type(struct packmsg_input *buf) {
+	if (unlikely(packmsg_done(buf)))
+		return PACKMSG_DONE;
+
+	uint8_t hdr = packmsg_peek_hdr_(buf);
+
+	switch (hdr >> 4) {
+	case 0x0:
+	case 0x1:
+	case 0x2:
+	case 0x3:
+	case 0x4:
+	case 0x5:
+	case 0x6:
+	case 0x7: return PACKMSG_POSITIVE_FIXINT;
+	case 0x8: return PACKMSG_MAP;
+	case 0x9: return PACKMSG_ARRAY;
+	case 0xa:
+	case 0xb: return PACKMSG_STR;
+	case 0xc: switch (hdr & 0xf) {
+		case 0x0: return PACKMSG_NIL;
+		case 0x1: return PACKMSG_ERROR;
+		case 0x2:
+		case 0x3: return PACKMSG_BOOL;
+		case 0x4:
+		case 0x5:
+		case 0x6: return PACKMSG_BIN;
+		case 0x7:
+		case 0x8:
+		case 0x9: return PACKMSG_EXT;
+		case 0xa: return PACKMSG_FLOAT;
+		case 0xb: return PACKMSG_DOUBLE;
+		case 0xc: return PACKMSG_UINT8;
+		case 0xd: return PACKMSG_UINT16;
+		case 0xe: return PACKMSG_UINT32;
+		case 0xf: return PACKMSG_UINT64;
+		default: return PACKMSG_ERROR;
+		}
+	case 0xd: switch (hdr & 0xf) {
+		case 0x0: return PACKMSG_INT8;
+		case 0x1: return PACKMSG_INT16;
+		case 0x2: return PACKMSG_INT32;
+		case 0x3: return PACKMSG_INT64;
+		case 0x4: return PACKMSG_FIXEXT1;
+		case 0x5: return PACKMSG_FIXEXT2;
+		case 0x6: return PACKMSG_FIXEXT4;
+		case 0x7: return PACKMSG_FIXEXT8;
+		case 0x8: return PACKMSG_FIXEXT16;
+		case 0x9:
+		case 0xa:
+		case 0xb: return PACKMSG_STR;
+		case 0xc:
+		case 0xd: return PACKMSG_ARRAY;
+		case 0xe:
+		case 0xf: return PACKMSG_MAP;
+		default: return PACKMSG_ERROR;
+		}
+	case 0xe:
+	case 0xf: return PACKMSG_NEGATIVE_FIXINT;
+	default: return PACKMSG_ERROR;
+	}
 }
 
 #undef likely

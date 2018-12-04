@@ -264,32 +264,32 @@ START_TEST(add_bin)
 
 	bin[0] = 0xc4;
 	bin[1] = 0x00;
-        TEST_OUTPUT(packmsg_add_bin(&out, bin + 2, 0), bin, 2);
+	TEST_OUTPUT(packmsg_add_bin(&out, bin + 2, 0), bin, 2);
 
 	bin[0] = 0xc4;
 	bin[1] = 0x01;
-        TEST_OUTPUT(packmsg_add_bin(&out, bin + 2, 0x1), bin, 2 + 0x1);
+	TEST_OUTPUT(packmsg_add_bin(&out, bin + 2, 0x1), bin, 2 + 0x1);
 
 	bin[0] = 0xc4;
 	bin[1] = 0xff;
-        TEST_OUTPUT(packmsg_add_bin(&out, bin + 2, 0xff), bin, 2 + 0xff);
+	TEST_OUTPUT(packmsg_add_bin(&out, bin + 2, 0xff), bin, 2 + 0xff);
 
 	bin[0] = 0xc5;
 	bin[1] = 0x00;
 	bin[2] = 0x01;
-        TEST_OUTPUT(packmsg_add_bin(&out, bin + 3, 0x100), bin, 3 + 0x100);
+	TEST_OUTPUT(packmsg_add_bin(&out, bin + 3, 0x100), bin, 3 + 0x100);
 
 	bin[0] = 0xc5;
 	bin[1] = 0xff;
 	bin[2] = 0xff;
-        TEST_OUTPUT(packmsg_add_bin(&out, bin + 3, 0xffff), bin, 3 + 0xffff);
+	TEST_OUTPUT(packmsg_add_bin(&out, bin + 3, 0xffff), bin, 3 + 0xffff);
 
 	bin[0] = 0xc6;
 	bin[1] = 0x00;
 	bin[2] = 0x00;
 	bin[3] = 0x01;
 	bin[4] = 0x00;
-        TEST_OUTPUT(packmsg_add_bin(&out, bin + 5, 0x10000), bin, 5 + 0x10000);
+	TEST_OUTPUT(packmsg_add_bin(&out, bin + 5, 0x10000), bin, 5 + 0x10000);
 
 	// TODO: add a test case for 4 GB binary data?
 
@@ -343,29 +343,29 @@ START_TEST(add_ext)
 	ext[0] = 0xc7;
 	ext[1] = 0x00;
 	ext[2] = 0x01;
-        TEST_OUTPUT(packmsg_add_ext(&out, 1, ext + 3, 0), ext, 3);
+	TEST_OUTPUT(packmsg_add_ext(&out, 1, ext + 3, 0), ext, 3);
 
 	ext[0] = 0xc7;
 	ext[1] = 0x03;
 	ext[2] = 0x02;
-        TEST_OUTPUT(packmsg_add_ext(&out, 2, ext + 3, 0x3), ext, 3 + 0x3);
+	TEST_OUTPUT(packmsg_add_ext(&out, 2, ext + 3, 0x3), ext, 3 + 0x3);
 
 	ext[0] = 0xc7;
 	ext[1] = 0xff;
 	ext[2] = 0x03;
-        TEST_OUTPUT(packmsg_add_ext(&out, 3, ext + 3, 0xff), ext, 3 + 0xff);
+	TEST_OUTPUT(packmsg_add_ext(&out, 3, ext + 3, 0xff), ext, 3 + 0xff);
 
 	ext[0] = 0xc8;
 	ext[1] = 0x00;
 	ext[2] = 0x01;
 	ext[3] = 0x04;
-        TEST_OUTPUT(packmsg_add_ext(&out, 4, ext + 4, 0x100), ext, 4 + 0x100);
+	TEST_OUTPUT(packmsg_add_ext(&out, 4, ext + 4, 0x100), ext, 4 + 0x100);
 
 	ext[0] = 0xc8;
 	ext[1] = 0xff;
 	ext[2] = 0xff;
 	ext[3] = 0x05;
-        TEST_OUTPUT(packmsg_add_ext(&out, 5, ext + 4, 0xffff), ext, 4 + 0xffff);
+	TEST_OUTPUT(packmsg_add_ext(&out, 5, ext + 4, 0xffff), ext, 4 + 0xffff);
 
 	ext[0] = 0xc9;
 	ext[1] = 0x00;
@@ -373,7 +373,7 @@ START_TEST(add_ext)
 	ext[3] = 0x01;
 	ext[4] = 0x00;
 	ext[5] = 0x06;
-        TEST_OUTPUT(packmsg_add_ext(&out, 6, ext + 6, 0x10000), ext, 6 + 0x10000);
+	TEST_OUTPUT(packmsg_add_ext(&out, 6, ext + 6, 0x10000), ext, 6 + 0x10000);
 
 	// TODO: add a test case for 4 GB ext data?
 
@@ -927,32 +927,32 @@ START_TEST(get_bin)
 
 	bin[0] = 0xc4;
 	bin[1] = 0x00;
-        TEST_INPUT_BIN(2, 0, bin);
+	TEST_INPUT_BIN(2, 0, bin);
 
 	bin[0] = 0xc4;
 	bin[1] = 0x01;
-        TEST_INPUT_BIN(2, 0x1, bin);
+	TEST_INPUT_BIN(2, 0x1, bin);
 
 	bin[0] = 0xc4;
 	bin[1] = 0xff;
-        TEST_INPUT_BIN(2, 0xff, bin);
+	TEST_INPUT_BIN(2, 0xff, bin);
 
 	bin[0] = 0xc5;
 	bin[1] = 0x00;
 	bin[2] = 0x01;
-        TEST_INPUT_BIN(3, 0x100, bin);
+	TEST_INPUT_BIN(3, 0x100, bin);
 
 	bin[0] = 0xc5;
 	bin[1] = 0xff;
 	bin[2] = 0xff;
-        TEST_INPUT_BIN(3, 0xffff, bin);
+	TEST_INPUT_BIN(3, 0xffff, bin);
 
 	bin[0] = 0xc6;
 	bin[1] = 0x00;
 	bin[2] = 0x00;
 	bin[3] = 0x01;
 	bin[4] = 0x00;
-        TEST_INPUT_BIN(5, 0x10000, bin);
+	TEST_INPUT_BIN(5, 0x10000, bin);
 
 	free(bin);
 }
@@ -1023,29 +1023,29 @@ START_TEST(get_ext)
 	ext[0] = 0xc7;
 	ext[1] = 0x00;
 	ext[2] = 0x01;
-        TEST_INPUT_EXT(3, 1, 0, ext);
+	TEST_INPUT_EXT(3, 1, 0, ext);
 
 	ext[0] = 0xc7;
 	ext[1] = 0x01;
 	ext[2] = 0x02;
-        TEST_INPUT_EXT(3, 2, 0x1, ext);
+	TEST_INPUT_EXT(3, 2, 0x1, ext);
 
 	ext[0] = 0xc7;
 	ext[1] = 0xff;
 	ext[2] = 0x03;
-        TEST_INPUT_EXT(3, 3, 0xff, ext);
+	TEST_INPUT_EXT(3, 3, 0xff, ext);
 
 	ext[0] = 0xc8;
 	ext[1] = 0x00;
 	ext[2] = 0x01;
 	ext[3] = 0x04;
-        TEST_INPUT_EXT(4, 4, 0x100, ext);
+	TEST_INPUT_EXT(4, 4, 0x100, ext);
 
 	ext[0] = 0xc8;
 	ext[1] = 0xff;
 	ext[2] = 0xff;
 	ext[3] = 0x05;
-        TEST_INPUT_EXT(4, 5, 0xffff, ext);
+	TEST_INPUT_EXT(4, 5, 0xffff, ext);
 
 	ext[0] = 0xc9;
 	ext[1] = 0x00;
@@ -1053,7 +1053,7 @@ START_TEST(get_ext)
 	ext[3] = 0x01;
 	ext[4] = 0x00;
 	ext[5] = 0x06;
-        TEST_INPUT_EXT(6, 6, 0x10000, ext);
+	TEST_INPUT_EXT(6, 6, 0x10000, ext);
 
 	free(ext);
 }

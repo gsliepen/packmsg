@@ -150,7 +150,7 @@ static inline void packmsg_add_bool(struct packmsg_output *buf, bool val)
 
 static inline void packmsg_add_int8(struct packmsg_output *buf, int8_t val)
 {
-	if (val >= 0)		// fixint
+	if (val >= -32)		// fixint
 		packmsg_write_hdr_(buf, val);
 	else			// TODO: negative fixint
 		packmsg_write_hdrdata_(buf, 0xd0, &val, 1);
@@ -393,8 +393,8 @@ static inline bool packmsg_get_bool(struct packmsg_input *buf)
 static inline int8_t packmsg_get_int8(struct packmsg_input *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
-	if (hdr < 0x80) {
-		return hdr;
+	if (hdr < 0x80 || hdr >= 0xe0) {
+		return (int8_t)hdr;
 	} else if (hdr == 0xd0) {
 		return packmsg_read_hdr_(buf);
 	} else {
@@ -406,8 +406,8 @@ static inline int8_t packmsg_get_int8(struct packmsg_input *buf)
 static inline int16_t packmsg_get_int16(struct packmsg_input *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
-	if (hdr < 0x80) {
-		return hdr;
+	if (hdr < 0x80 || hdr >= 0xe0) {
+		return (int8_t)hdr;
 	} else if (hdr == 0xd0) {
 		return (int8_t) packmsg_read_hdr_(buf);
 	} else if (hdr == 0xd1) {
@@ -423,8 +423,8 @@ static inline int16_t packmsg_get_int16(struct packmsg_input *buf)
 static inline int32_t packmsg_get_int32(struct packmsg_input *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
-	if (hdr < 0x80) {
-		return hdr;
+	if (hdr < 0x80 || hdr >= 0xe0) {
+		return (int8_t)hdr;
 	} else if (hdr == 0xd0) {
 		return (int8_t) packmsg_read_hdr_(buf);
 	} else if (hdr == 0xd1) {
@@ -444,8 +444,8 @@ static inline int32_t packmsg_get_int32(struct packmsg_input *buf)
 static inline int64_t packmsg_get_int64(struct packmsg_input *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
-	if (hdr < 0x80) {
-		return hdr;
+	if (hdr < 0x80 || hdr >= 0xe0) {
+		return (int8_t)hdr;
 	} else if (hdr == 0xd0) {
 		return (int8_t) packmsg_read_hdr_(buf);
 	} else if (hdr == 0xd1) {

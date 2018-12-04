@@ -41,7 +41,9 @@ START_TEST(add_int8)
 	TEST_OUTPUT(packmsg_add_int8(&out,        0), "\x00", 1);
 	TEST_OUTPUT(packmsg_add_int8(&out, INT8_MAX), "\x7f", 1);
 
-	TEST_OUTPUT(packmsg_add_int8(&out,       -1), "\xd0\xff", 2);
+	TEST_OUTPUT(packmsg_add_int8(&out,       -1), "\xff", 1);
+	TEST_OUTPUT(packmsg_add_int8(&out,      -32), "\xe0", 1);
+	TEST_OUTPUT(packmsg_add_int8(&out,      -33), "\xd0\xdf", 2);
 	TEST_OUTPUT(packmsg_add_int8(&out, INT8_MIN), "\xd0\x80", 2);
 }
 END_TEST
@@ -53,7 +55,9 @@ START_TEST(add_int16)
 	TEST_OUTPUT(packmsg_add_int16(&out,  1 + INT8_MAX), "\xd1\x80\x00", 3);
 	TEST_OUTPUT(packmsg_add_int16(&out,     INT16_MAX), "\xd1\xff\x7f", 3);
 
-	TEST_OUTPUT(packmsg_add_int16(&out,            -1), "\xd0\xff", 2);
+	TEST_OUTPUT(packmsg_add_int16(&out,            -1), "\xff", 1);
+	TEST_OUTPUT(packmsg_add_int16(&out,           -32), "\xe0", 1);
+	TEST_OUTPUT(packmsg_add_int16(&out,           -33), "\xd0\xdf", 2);
 	TEST_OUTPUT(packmsg_add_int16(&out,      INT8_MIN), "\xd0\x80", 2);
 	TEST_OUTPUT(packmsg_add_int16(&out, -1 + INT8_MIN), "\xd1\x7f\xff", 3);
 	TEST_OUTPUT(packmsg_add_int16(&out,     INT16_MIN), "\xd1\x00\x80", 3);
@@ -69,7 +73,9 @@ START_TEST(add_int32)
 	TEST_OUTPUT(packmsg_add_int32(&out,  1 + INT16_MAX), "\xd2\x00\x80\x00\x00", 5);
 	TEST_OUTPUT(packmsg_add_int32(&out,      INT32_MAX), "\xd2\xff\xff\xff\x7f", 5);
 
-	TEST_OUTPUT(packmsg_add_int32(&out,             -1), "\xd0\xff", 2);
+	TEST_OUTPUT(packmsg_add_int32(&out,             -1), "\xff", 1);
+	TEST_OUTPUT(packmsg_add_int32(&out,            -32), "\xe0", 1);
+	TEST_OUTPUT(packmsg_add_int32(&out,            -33), "\xd0\xdf", 2);
 	TEST_OUTPUT(packmsg_add_int32(&out,       INT8_MIN), "\xd0\x80", 2);
 	TEST_OUTPUT(packmsg_add_int32(&out,  -1 + INT8_MIN), "\xd1\x7f\xff", 3);
 	TEST_OUTPUT(packmsg_add_int32(&out,      INT16_MIN), "\xd1\x00\x80", 3);
@@ -89,7 +95,9 @@ START_TEST(add_int64)
 	TEST_OUTPUT(packmsg_add_int64(&out,  1LL + INT32_MAX), "\xd3\x00\x00\x00\x80\x00\x00\x00\x00", 9);
 	TEST_OUTPUT(packmsg_add_int64(&out,        INT64_MAX), "\xd3\xff\xff\xff\xff\xff\xff\xff\x7f", 9);
 
-	TEST_OUTPUT(packmsg_add_int64(&out,               -1), "\xd0\xff", 2);
+	TEST_OUTPUT(packmsg_add_int64(&out,               -1), "\xff", 1);
+	TEST_OUTPUT(packmsg_add_int64(&out,              -32), "\xe0", 1);
+	TEST_OUTPUT(packmsg_add_int64(&out,              -33), "\xd0\xdf", 2);
 	TEST_OUTPUT(packmsg_add_int64(&out,         INT8_MIN), "\xd0\x80", 2);
 	TEST_OUTPUT(packmsg_add_int64(&out,    -1 + INT8_MIN), "\xd1\x7f\xff", 3);
 	TEST_OUTPUT(packmsg_add_int64(&out,        INT16_MIN), "\xd1\x00\x80", 3);
@@ -401,6 +409,8 @@ START_TEST(get_int8)
 	TEST_INPUT(ck_assert(packmsg_get_int8(&in) ==        1), "\xd0\x01", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int8(&in) == INT8_MAX), "\xd0\x7f", 2);
 
+	TEST_INPUT(ck_assert(packmsg_get_int8(&in) ==       -1), "\xff", 1);
+	TEST_INPUT(ck_assert(packmsg_get_int8(&in) ==      -32), "\xe0", 1);
 	TEST_INPUT(ck_assert(packmsg_get_int8(&in) ==       -1), "\xd0\xff", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int8(&in) == INT8_MIN), "\xd0\x80", 2);
 
@@ -426,6 +436,8 @@ START_TEST(get_int16)
 	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==   1 + INT8_MAX), "\xd1\x80\x00", 3);
 	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==      INT16_MAX), "\xd1\xff\x7f", 3);
 
+	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==             -1), "\xff", 1);
+	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==            -32), "\xe0", 1);
 	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==             -1), "\xd0\xff", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==       INT8_MIN), "\xd0\x80", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int16(&in) ==  -1 + INT8_MIN), "\xd1\x7f\xff", 3);
@@ -460,6 +472,8 @@ START_TEST(get_int32)
 	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==  1 + INT16_MAX), "\xd2\x00\x80\x00\x00", 5);
 	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==      INT32_MAX), "\xd2\xff\xff\xff\x7f", 5);
 
+	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==             -1), "\xff", 1);
+	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==            -32), "\xe0", 1);
 	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==             -1), "\xd0\xff", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==       INT8_MIN), "\xd0\x80", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int32(&in) ==  -1 + INT8_MIN), "\xd1\x7f\xff", 3);
@@ -504,6 +518,8 @@ START_TEST(get_int64)
 	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==  1LL + INT32_MAX), "\xd3\x00\x00\x00\x80\x00\x00\x00\x00", 9);
 	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==        INT64_MAX), "\xd3\xff\xff\xff\xff\xff\xff\xff\x7f", 9);
 
+	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==               -1), "\xff", 1);
+	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==              -32), "\xe0", 1);
 	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==               -1), "\xd0\xff", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==         INT8_MIN), "\xd0\x80", 2);
 	TEST_INPUT(ck_assert(packmsg_get_int64(&in) ==    -1 + INT8_MIN), "\xd1\x7f\xff", 3);
@@ -534,6 +550,7 @@ START_TEST(get_uint8)
 	TEST_INPUT(ck_assert(packmsg_get_uint8(&in) ==    UINT8_MAX), "\xcc\xff", 2);
 
 	/* Fail on larger ints or signed ints */
+	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint8(&in) == 0), "\xff", 1);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint8(&in) == 0), "\xd0\x00", 2);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint8(&in) == 0), "\xcd\x00\x00", 3);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint8(&in) == 0), "\xce\x00\x00\x00\x00", 5);
@@ -564,6 +581,7 @@ START_TEST(get_uint16)
 	TEST_INPUT(ck_assert(packmsg_get_uint16(&in) ==    UINT16_MAX), "\xcd\xff\xff", 3);
 
 	/* Fail on larger ints or signed ints */
+	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint16(&in) == 0), "\xff", 1);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint16(&in) == 0), "\xd0\x00", 2);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint16(&in) == 0), "\xd1\x00\x00", 3);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint16(&in) == 0), "\xce\x00\x00\x00\x00", 5);
@@ -608,6 +626,7 @@ START_TEST(get_uint32)
 	TEST_INPUT(ck_assert(packmsg_get_uint32(&in) ==      UINT32_MAX), "\xce\xff\xff\xff\xff", 5);
 
 	/* Fail on larger ints or signed ints */
+	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint32(&in) == 0), "\xff", 1);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint32(&in) == 0), "\xd0\x00", 2);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint32(&in) == 0), "\xd1\x00\x00", 3);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint32(&in) == 0), "\xd2\x00\x00\x00\x00", 5);
@@ -670,6 +689,7 @@ START_TEST(get_uint64)
 	TEST_INPUT(ck_assert(packmsg_get_uint64(&in) ==        UINT64_MAX), "\xcf\xff\xff\xff\xff\xff\xff\xff\xff", 9);
 
 	/* Fail on larger ints or signed ints */
+	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint64(&in) == 0), "\xff", 1);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint64(&in) == 0), "\xd0\x00", 2);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint64(&in) == 0), "\xd1\x00\x00", 3);
 	TEST_INPUT_FAILURE(ck_assert(packmsg_get_uint64(&in) == 0), "\xd2\x00\x00\x00\x00", 5);

@@ -735,6 +735,19 @@ END_TEST
 
 START_TEST(get_double)
 {
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),            0), "\xca\x00\x00\x00\x00", 5);
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),      FLT_MIN), "\xca\x00\x00\x80\x00", 5);
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),  FLT_EPSILON), "\xca\x00\x00\x00\x34", 5);
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),            1), "\xca\x00\x00\x80\x3f", 5);
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),      FLT_MAX), "\xca\xff\xff\x7f\x7f", 5);
+
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),           -1), "\xca\x00\x00\x80\xbf", 5);
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in), FLT_TRUE_MIN), "\xca\x01\x00\x00\x00", 5);
+
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),     INFINITY), "\xca\x00\x00\x80\x7f", 5);
+	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),    -INFINITY), "\xca\x00\x00\x80\xff", 5);
+	TEST_INPUT(ck_assert_double_nan(packmsg_get_double(&in)),              "\xca\x00\x00\xc0\x7f", 5);
+
 	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),            0), "\xcb\x00\x00\x00\x00\x00\x00\x00\x00", 9);
 	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),      DBL_MIN), "\xcb\x00\x00\x00\x00\x00\x00\x10\x00", 9);
 	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),  DBL_EPSILON), "\xcb\x00\x00\x00\x00\x00\x00\xb0\x3c", 9);
@@ -748,7 +761,7 @@ START_TEST(get_double)
 	TEST_INPUT(ck_assert_double_eq(packmsg_get_double(&in),    -INFINITY), "\xcb\x00\x00\x00\x00\x00\x00\xf0\xff", 9);
 	TEST_INPUT(ck_assert_double_nan(packmsg_get_double(&in)),              "\xcb\x00\x00\x00\x00\x00\x00\xf8\x7f", 9);
 
-	/* Fail on ints and float */
+	/* Fail on ints */
 	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\x00", 1);
 	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\xcc\x00", 2);
 	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\xcd\x00\x00", 3);
@@ -758,7 +771,6 @@ START_TEST(get_double)
 	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\xd1\x00\x00", 3);
 	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\xd2\x00\x00\x00\x00", 5);
 	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\xd3\x00\x00\x00\x00\x00\x00\x00\x00", 9);
-	TEST_INPUT_FAILURE(ck_assert_double_eq(packmsg_get_double(&in), 0), "\xca\x00\x00\x00\x00", 5);
 }
 END_TEST
 

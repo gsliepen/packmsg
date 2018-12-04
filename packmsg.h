@@ -562,6 +562,10 @@ static inline double packmsg_get_double(struct packmsg_input *buf)
 		double val;
 		packmsg_read_data_(buf, &val, 8);
 		return val;
+	} else if (hdr == 0xca) {
+		float val;
+		packmsg_read_data_(buf, &val, 4);
+		return val;
 	} else {
 		buf->len = -1;
 		return 0;

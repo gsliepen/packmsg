@@ -10,6 +10,13 @@
 	memcpy(buf + size, "Canary!", 8);\
 	struct packmsg_output out = {buf, size};\
 	statement;\
+	char filename[100];\
+	snprintf(filename, sizeof filename, "fuzz-in/testcase-%d", __LINE__);\
+	FILE *f = fopen(filename, "w");\
+	if (f) {\
+		fwrite(buf, size, 1, f);\
+		fclose(f);\
+	}\
 	ck_assert(packmsg_output_ok(&out));\
 	ck_assert_int_eq(packmsg_output_size(&out, buf), size);\
 	ck_assert_mem_eq(buf, expected, size);\

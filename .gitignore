@@ -2,10 +2,11 @@
 !.gitignore
 *.gch
 *.o
+*~
 core
 core.*
 /benchmark
+/decode
 /example
 /test
-
-
+/fuzz-out

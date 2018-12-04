@@ -1,5 +1,6 @@
 CFLAGS ?= -O2 -march=native -g -std=c11 -Wall -W -pedantic
 CXXFLAGS ?= -O2 -march=native -g -std=c++11 -Wall -W -pedantic
+AFL_CC ?= afl-gcc
 
 BENCHMARK_SRCS = \
 	benchmark.cpp \
@@ -23,10 +24,16 @@ benchmark: $(BENCHMARK_SRCS) $(BENCHMARK_HDRS) packmsg.h Makefile
 test: test.c packmsg.h Makefile
 	$(CC) -o $@ $< $(CFLAGS) `pkg-config --cflags --libs check`
 
+decode: decode.c packmsg.h Makefile
+	$(AFL_CC) -o $@ $< $(CFLAGS)
+
 check: test
 	./test
 
-clean:
-	rm -f example benchmark test
+fuzz: decode check
+	afl-fuzz -i fuzz-in -o fuzz-out -- ./decode @@
 
-.PHONY: clean check
+clean:
+	rm -f example benchmark decode test fuzz-in/testcase-*
+
+.PHONY: clean check fuzz

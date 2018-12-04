@@ -285,36 +285,6 @@ static inline void packmsg_add_ext(struct packmsg_output *buf, int8_t type, cons
 	packmsg_write_data_(buf, data, dlen);
 }
 
-static inline void packmsg_add_fixext1(struct packmsg_output *buf, int8_t type, const void *data)
-{
-	packmsg_write_hdrdata_(buf, 0xd4, &type, 1);
-	packmsg_write_data_(buf, data, 1);
-}
-
-static inline void packmsg_add_fixext2(struct packmsg_output *buf, int8_t type, const void *data)
-{
-	packmsg_write_hdrdata_(buf, 0xd5, &type, 1);
-	packmsg_write_data_(buf, data, 2);
-}
-
-static inline void packmsg_add_fixext4(struct packmsg_output *buf, int8_t type, const void *data)
-{
-	packmsg_write_hdrdata_(buf, 0xd6, &type, 1);
-	packmsg_write_data_(buf, data, 4);
-}
-
-static inline void packmsg_add_fixext8(struct packmsg_output *buf, int8_t type, const void *data)
-{
-	packmsg_write_hdrdata_(buf, 0xd7, &type, 1);
-	packmsg_write_data_(buf, data, 8);
-}
-
-static inline void packmsg_add_fixext16(struct packmsg_output *buf, int8_t type, const void *data)
-{
-	packmsg_write_hdrdata_(buf, 0xd8, &type, 1);
-	packmsg_write_data_(buf, data, 16);
-}
-
 static inline void packmsg_add_map(struct packmsg_output *buf, uint32_t dlen)
 {
 	if (dlen <= 0xf) {
@@ -808,76 +778,6 @@ static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t *t
 	}
 }
 
-static inline int8_t packmsg_get_fixext1(struct packmsg_input *buf, void *data)
-{
-	assert(data);
-
-	if (packmsg_read_hdr_(buf) != 0xd4) {
-		buf->len = -1;
-		return 0;
-	}
-
-	int8_t ext = packmsg_read_hdr_(buf);
-	packmsg_read_data_(buf, data, 1);
-	return likely(packmsg_input_ok(buf)) ? ext : 0;
-}
-
-static inline int8_t packmsg_get_fixext2(struct packmsg_input *buf, void *data)
-{
-	assert(data);
-
-	if (packmsg_read_hdr_(buf) != 0xd5) {
-		buf->len = -1;
-		return 0;
-	}
-
-	int8_t ext = packmsg_read_hdr_(buf);
-	packmsg_read_data_(buf, data, 2);
-	return likely(packmsg_input_ok(buf)) ? ext : 0;
-}
-
-static inline int8_t packmsg_get_fixext4(struct packmsg_input *buf, void *data)
-{
-	assert(data);
-
-	if (packmsg_read_hdr_(buf) != 0xd6) {
-		buf->len = -1;
-		return 0;
-	}
-
-	int8_t ext = packmsg_read_hdr_(buf);
-	packmsg_read_data_(buf, data, 4);
-	return likely(packmsg_input_ok(buf)) ? ext : 0;
-}
-
-static inline int8_t packmsg_get_fixext8(struct packmsg_input *buf, void *data)
-{
-	assert(data);
-
-	if (packmsg_read_hdr_(buf) != 0xd7) {
-		buf->len = -1;
-		return 0;
-	}
-
-	int8_t ext = packmsg_read_hdr_(buf);
-	packmsg_read_data_(buf, data, 8);
-	return likely(packmsg_input_ok(buf)) ? ext : 0;
-}
-
-static inline int8_t packmsg_get_fixext16(struct packmsg_input *buf, void *data)
-{
-	assert(data);
-
-	if (packmsg_read_hdr_(buf) != 0xd8) {
-		buf->len = -1;
-		return 0;
-	}
-
-	int8_t ext = packmsg_read_hdr_(buf);
-	packmsg_read_data_(buf, data, 16);
-	return likely(packmsg_input_ok(buf)) ? ext : 0;
-}
-
 static inline uint32_t packmsg_get_map(struct packmsg_input *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
@@ -937,11 +837,6 @@ enum packmsg_type {
 	PACKMSG_STR,
 	PACKMSG_BIN,
 	PACKMSG_EXT,
-	PACKMSG_FIXEXT1,
-	PACKMSG_FIXEXT2,
-	PACKMSG_FIXEXT4,
-	PACKMSG_FIXEXT8,
-	PACKMSG_FIXEXT16,
 	PACKMSG_MAP,
 	PACKMSG_ARRAY,
 	PACKMSG_DONE,
@@ -1026,29 +921,10 @@ static inline bool packmsg_is_bin(struct packmsg_input *buf)
 	return (packmsg_peek_hdr_(buf) & 0xfc) == 0xc4;
 }
 
-static inline bool packmsg_is_fixext1(struct packmsg_input *buf)
+static inline bool packmsg_is_ext(struct packmsg_input *buf)
 {
-	return packmsg_peek_hdr_(buf) == 0xd4;
-}
-
-static inline bool packmsg_is_fixext2(struct packmsg_input *buf)
-{
-	return packmsg_peek_hdr_(buf) == 0xd5;
-}
-
-static inline bool packmsg_is_fixext4(struct packmsg_input *buf)
-{
-	return packmsg_peek_hdr_(buf) == 0xd6;
-}
-
-static inline bool packmsg_is_fixext8(struct packmsg_input *buf)
-{
-	return packmsg_peek_hdr_(buf) == 0xd7;
-}
-
-static inline bool packmsg_is_fixext16(struct packmsg_input *buf)
-{
-	return packmsg_peek_hdr_(buf) == 0xd8;
+	uint8_t hdr = packmsg_peek_hdr_(buf);
+	return (hdr >= 0xc7 && hdr <= 0xc9) || (hdr >= 0xd4 && hdr <= 0xd8);
 }
 
 static inline bool packmsg_is_map(struct packmsg_input *buf)

@@ -73,31 +73,6 @@ static void decode_scalar(struct packmsg_input *in) {
 		printf("<%u bytes binary>", size);
 		break;
 	}
-	case PACKMSG_FIXEXT1: {
-		char bin[1];
-		printf("<%u bytes fixext %d>", 1, packmsg_get_fixext1(in, bin));
-		return;
-	}
-	case PACKMSG_FIXEXT2: {
-		char bin[2];
-		printf("<%u bytes fixext %d>", 2, packmsg_get_fixext2(in, bin));
-		return;
-	}
-	case PACKMSG_FIXEXT4: {
-		char bin[4];
-		printf("<%u bytes fixext %d>", 4, packmsg_get_fixext4(in, bin));
-		return;
-	}
-	case PACKMSG_FIXEXT8: {
-		char bin[8];
-		printf("<%u bytes fixext %d>", 8, packmsg_get_fixext8(in, bin));
-		return;
-	}
-	case PACKMSG_FIXEXT16: {
-		char bin[16];
-		printf("<%u bytes fixext %d>", 16, packmsg_get_fixext16(in, bin));
-		return;
-	}
 	case PACKMSG_EXT: {
 		const void *bin;
 		int8_t ext;

@@ -881,8 +881,10 @@ END_TEST
 	ck_assert_mem_eq(rawptr, inbuf + hdrsize, size);\
 \
 	struct packmsg_input in2 = {(uint8_t *)inbuf, hdrsize + size};\
-	void *dupptr = packmsg_get_bin_dup(&in2);\
+	uint32_t len;\
+	void *dupptr = packmsg_get_bin_dup(&in2, &len);\
 	ck_assert_ptr_nonnull(dupptr);\
+	ck_assert_int_eq(len, size);\
 	ck_assert(packmsg_done(&in2));\
 	ck_assert_mem_eq(dupptr, inbuf + hdrsize, size);\
 	free(dupptr);\
@@ -901,8 +903,9 @@ END_TEST
 	ck_assert(!packmsg_done(&in4));\
 \
 	struct packmsg_input in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
-	dupptr = packmsg_get_bin_dup(&in5);\
+	dupptr = packmsg_get_bin_dup(&in5, &len);\
 	ck_assert_ptr_null(dupptr);\
+	ck_assert_int_eq(len, 0);\
 	ck_assert(!packmsg_done(&in5));\
 \
 	struct packmsg_input in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
@@ -971,9 +974,11 @@ END_TEST
 	ck_assert_mem_eq(rawptr, inbuf + hdrsize, size);\
 \
 	struct packmsg_input in2 = {(uint8_t *)inbuf, hdrsize + size};\
-	void *dupptr = packmsg_get_ext_dup(&in2, &type);\
+	uint32_t len;\
+	void *dupptr = packmsg_get_ext_dup(&in2, &type, &len);\
 	ck_assert(packmsg_done(&in2));\
 	ck_assert_int_eq(type, expected);\
+	ck_assert_int_eq(len, size);\
 	ck_assert_ptr_nonnull(dupptr);\
 	ck_assert_mem_eq(dupptr, inbuf + hdrsize, size);\
 	free(dupptr);\
@@ -994,8 +999,9 @@ END_TEST
 	ck_assert(!packmsg_done(&in4));\
 \
 	struct packmsg_input in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
-	dupptr = packmsg_get_ext_dup(&in5, &type);\
+	dupptr = packmsg_get_ext_dup(&in5, &type, &len);\
 	ck_assert_ptr_null(dupptr);\
+	ck_assert_int_eq(len, 0);\
 	ck_assert(!packmsg_done(&in5));\
 \
 	struct packmsg_input in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\

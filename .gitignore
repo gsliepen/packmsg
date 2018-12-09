@@ -10,3 +10,5 @@ core.*
 /example
 /test
 /fuzz-out
+/html
+/latex

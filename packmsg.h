@@ -201,6 +201,34 @@ static inline bool packmsg_done(const struct packmsg_input *buf)
 	return buf->len == 0;
 }
 
+/* Invalidation functions
+ * ======================
+ */
+
+/** \brief Invalidate an output iterator.
+ *  \memberof packmsg_output
+ *
+ * This function invalidates an output iterator. This signals that an error occurred,
+ * and prevents further output to be written.
+ *
+ * \param buf  A pointer to an output buffer iterator.
+ */
+static inline void packmsg_output_invalidate(struct packmsg_output *buf) {
+	buf->len = -1;
+}
+
+/** \brief Invalidate an input iterator.
+ *  \memberof packmsg_input
+ *
+ * This function invalidates an input iterator. This signals that an error occurred,
+ * and prevents further input to be read.
+ *
+ * \param buf  A pointer to an input buffer iterator.
+ */
+static inline void packmsg_input_invalidate(struct packmsg_input *buf) {
+	buf->len = -1;
+}
+
 /* Encoding functions
  * ==================
  */
@@ -216,7 +244,7 @@ static inline void packmsg_write_hdr_(struct packmsg_output *buf, uint8_t hdr)
 		buf->ptr++;
 		buf->len--;
 	} else {
-		buf->len = -1;
+		packmsg_output_invalidate(buf);
 	}
 }
 
@@ -232,7 +260,7 @@ static inline void packmsg_write_data_(struct packmsg_output *buf, const void *d
 		buf->ptr += dlen;
 		buf->len -= dlen;
 	} else {
-		buf->len = -1;
+		packmsg_output_invalidate(buf);
 	}
 }
 
@@ -252,7 +280,7 @@ static inline void packmsg_write_hdrdata_(struct packmsg_output *buf, uint8_t hd
 		buf->ptr += dlen;
 		buf->len -= dlen;
 	} else {
-		buf->len = -1;
+		packmsg_output_invalidate(buf);
 	}
 }
 
@@ -429,7 +457,7 @@ static inline void packmsg_add_str(struct packmsg_output *buf, const char *str)
 	} else if (slen <= 0xffffffff) {
 		packmsg_write_hdrdata_(buf, 0xdb, &slen, 4);
 	} else {
-		buf->len = -1;
+		packmsg_output_invalidate(buf);
 		return;
 	}
 	packmsg_write_data_(buf, str, slen);
@@ -451,7 +479,7 @@ static inline void packmsg_add_bin(struct packmsg_output *buf, const void *data,
 	} else if (dlen <= 0xffffffff) {
 		packmsg_write_hdrdata_(buf, 0xc6, &dlen, 4);
 	} else {
-		buf->len = -1;
+		packmsg_output_invalidate(buf);
 		return;
 	}
 	packmsg_write_data_(buf, data, dlen);
@@ -490,7 +518,7 @@ static inline void packmsg_add_ext(struct packmsg_output *buf, int8_t type, cons
 		packmsg_write_hdrdata_(buf, 0xc9, &dlen, 4);
 		packmsg_write_data_(buf, &type, 1);
 	} else {
-		buf->len = -1;
+		packmsg_output_invalidate(buf);
 		return;
 	}
 	packmsg_write_data_(buf, data, dlen);
@@ -556,7 +584,7 @@ static inline uint8_t packmsg_read_hdr_(struct packmsg_input *buf)
 		buf->len--;
 		return hdr;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0xc1;
 	}
 }
@@ -573,7 +601,7 @@ static inline void packmsg_read_data_(struct packmsg_input *buf, void *data, uin
 		buf->ptr += dlen;
 		buf->len -= dlen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 	}
 }
 
@@ -601,7 +629,7 @@ static inline uint8_t packmsg_peek_hdr_(const struct packmsg_input *buf)
 static inline void packmsg_get_nil(struct packmsg_input *buf)
 {
 	if (packmsg_read_hdr_(buf) != 0xc0)
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 }
 
 
@@ -621,7 +649,7 @@ static inline bool packmsg_get_bool(struct packmsg_input *buf)
 	} else if (hdr == 0xc3) {
 		return true;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return false;
 	}
 }
@@ -641,7 +669,7 @@ static inline int8_t packmsg_get_int8(struct packmsg_input *buf)
 	} else if (hdr == 0xd0) {
 		return packmsg_read_hdr_(buf);
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -665,7 +693,7 @@ static inline int16_t packmsg_get_int16(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 2);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -693,7 +721,7 @@ static inline int32_t packmsg_get_int32(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 4);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -725,7 +753,7 @@ static inline int64_t packmsg_get_int64(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 8);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -745,7 +773,7 @@ static inline uint8_t packmsg_get_uint8(struct packmsg_input *buf)
 	} else if (hdr == 0xcc) {
 		return packmsg_read_hdr_(buf);
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -769,7 +797,7 @@ static inline uint16_t packmsg_get_uint16(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 2);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -797,7 +825,7 @@ static inline uint32_t packmsg_get_uint32(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 4);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -829,7 +857,7 @@ static inline uint64_t packmsg_get_uint64(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 8);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -849,7 +877,7 @@ static inline float packmsg_get_float(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 4);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -873,7 +901,7 @@ static inline double packmsg_get_double(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &val, 4);
 		return val;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -907,7 +935,7 @@ static inline uint32_t packmsg_get_str_raw(struct packmsg_input *buf, const char
 	} else if (hdr == 0xdb) {
 		packmsg_read_data_(buf, &slen, 4);
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		*str = NULL;
 		return 0;
 	}
@@ -918,7 +946,7 @@ static inline uint32_t packmsg_get_str_raw(struct packmsg_input *buf, const char
 		buf->len -= slen;
 		return slen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		*str = NULL;
 		return 0;
 	}
@@ -947,7 +975,7 @@ static inline char *packmsg_get_str_dup(struct packmsg_input *buf)
 			dup[slen] = 0;
 			return dup;
 		} else {
-			buf->len = -1;
+			packmsg_input_invalidate(buf);
 			return NULL;
 		}
 	} else {
@@ -984,7 +1012,7 @@ static inline uint32_t packmsg_get_str_copy(struct packmsg_input *buf, void *dat
 		} else {
 			if (dlen)
 				*(char *)data = 0;
-			buf->len = -1;
+			packmsg_input_invalidate(buf);
 			return 0;
 		}
 	} else {
@@ -1021,7 +1049,7 @@ static inline uint32_t packmsg_get_bin_raw(struct packmsg_input *buf, const void
 	} else if (hdr == 0xc6) {
 		packmsg_read_data_(buf, &dlen, 4);
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		*data = NULL;
 		return 0;
 	}
@@ -1032,7 +1060,7 @@ static inline uint32_t packmsg_get_bin_raw(struct packmsg_input *buf, const void
 		buf->len -= dlen;
 		return dlen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		*data = NULL;
 		return 0;
 	}
@@ -1062,7 +1090,7 @@ static inline void *packmsg_get_bin_dup(struct packmsg_input *buf, uint32_t *dle
 			return dup;
 		} else {
 			*dlen = 0;
-			buf->len = -1;
+			packmsg_input_invalidate(buf);
 			return NULL;
 		}
 	} else {
@@ -1094,7 +1122,7 @@ static inline uint32_t packmsg_get_bin_copy(struct packmsg_input *buf, void *raw
 			memcpy(rawbuf, data, dlen);
 			return dlen;
 		} else {
-			buf->len = -1;
+			packmsg_input_invalidate(buf);
 			return 0;
 		}
 	} else {
@@ -1136,7 +1164,7 @@ static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t *ty
 	} else if (hdr >= 0xd4 && hdr <= 0xd8) {
 		dlen = 1 << (hdr - 0xd4);
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		*type = 0;
 		*data = NULL;
 		return 0;
@@ -1150,7 +1178,7 @@ static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t *ty
 		buf->len -= dlen;
 		return dlen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		*type = 0;
 		*data = NULL;
 		return 0;
@@ -1187,7 +1215,7 @@ static inline void *packmsg_get_ext_dup(struct packmsg_input *buf, int8_t *type,
 		} else {
 			*type = 0;
 			*dlen = 0;
-			buf->len = -1;
+			packmsg_input_invalidate(buf);
 			return NULL;
 		}
 	} else {
@@ -1225,7 +1253,7 @@ static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t *t
 			return dlen;
 		} else {
 			*type = 0;
-			buf->len = -1;
+			packmsg_input_invalidate(buf);
 			return 0;
 		}
 	} else {
@@ -1260,7 +1288,7 @@ static inline uint32_t packmsg_get_map(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &dlen, 4);
 		return dlen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -1291,7 +1319,7 @@ static inline uint32_t packmsg_get_array(struct packmsg_input *buf)
 		packmsg_read_data_(buf, &dlen, 4);
 		return dlen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 		return 0;
 	}
 }
@@ -1730,7 +1758,7 @@ static inline void packmsg_skip_element(struct packmsg_input *buf) {
 		buf->ptr += dlen;
 		buf->len -= dlen;
 	} else {
-		buf->len = -1;
+		packmsg_input_invalidate(buf);
 	}
 }
 

@@ -1132,6 +1132,64 @@ START_TEST(get_array)
 }
 END_TEST
 
+START_TEST(simple_object)
+{
+	uint8_t buf[1024];
+	packmsg_output_t out = {buf, sizeof(buf)};
+
+	packmsg_add_map(&out, 2);
+	packmsg_add_str(&out, "compact");
+	packmsg_add_bool(&out, true);
+	packmsg_add_str(&out, "schema");
+	packmsg_add_int32(&out, 0);
+
+	ck_assert(packmsg_output_ok(&out));
+	ck_assert_int_eq(packmsg_output_size(&out, buf), 18);
+	ck_assert_mem_eq(buf, "\x82\xa7" "compact" "\xc3\xa6" "schema", 18);
+
+	packmsg_input_t in = {buf, packmsg_output_size(&out, buf)};
+
+	ck_assert(packmsg_is_map(&in));
+	ck_assert(packmsg_get_type(&in) == PACKMSG_MAP);
+	ck_assert_int_eq(packmsg_get_map(&in), 2);
+
+	ck_assert(packmsg_is_str(&in));
+	ck_assert(packmsg_get_type(&in) == PACKMSG_STR);
+	char *str = packmsg_get_str_dup(&in);
+	ck_assert_ptr_nonnull(str);
+	ck_assert_str_eq(str, "compact");
+	free(str);
+
+	ck_assert(packmsg_is_bool(&in));
+	ck_assert(packmsg_get_type(&in) == PACKMSG_BOOL);
+	ck_assert(packmsg_get_bool(&in));
+
+	ck_assert(packmsg_is_str(&in));
+	ck_assert(packmsg_get_type(&in) == PACKMSG_STR);
+	str = packmsg_get_str_dup(&in);
+	ck_assert_ptr_nonnull(str);
+	ck_assert_str_eq(str, "schema");
+	free(str);
+
+	ck_assert(packmsg_is_int32(&in));
+	ck_assert(packmsg_get_type(&in) == PACKMSG_POSITIVE_FIXINT);
+	ck_assert_int_eq(packmsg_get_int32(&in), 0);
+
+	ck_assert(packmsg_done(&in));
+
+	packmsg_input_t in2 = {buf, packmsg_output_size(&out, buf)};
+	for (int i = 0; i < 5; i++) {
+		packmsg_skip_element(&in2);
+		assert(packmsg_input_ok(&in2));
+	}
+	assert(packmsg_done(&in2));
+
+	packmsg_input_t in3 = {buf, packmsg_output_size(&out, buf)};
+	packmsg_skip_object(&in3);
+	ck_assert(packmsg_done(&in3));
+}
+END_TEST
+
 int main(void)
 {
 	Suite *s = suite_create("packmsg");
@@ -1188,6 +1246,12 @@ int main(void)
 		tcase_add_test(tc_get, get_array);
 	}
 	suite_add_tcase(s, tc_get);
+
+	TCase *tc_objects = tcase_create("objects");
+	{
+		tcase_add_test(tc_objects, simple_object);
+	}
+	suite_add_tcase(s, tc_objects);
 
 	srunner_run_all(sr, CK_NORMAL);
 	int failed = srunner_ntests_failed(sr);

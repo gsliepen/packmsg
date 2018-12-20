@@ -1686,7 +1686,7 @@ static inline enum packmsg_type packmsg_get_type(const packmsg_input_t *buf) {
  */
 static inline void packmsg_skip_element(packmsg_input_t *buf) {
 	uint8_t hdr = packmsg_read_hdr_(buf);
-	ptrdiff_t skip = 0;
+	int32_t skip = 0;
 
 	switch(hdr >> 4) {
 	case 0x0:
@@ -1698,9 +1698,9 @@ static inline void packmsg_skip_element(packmsg_input_t *buf) {
 	case 0x6:
 	case 0x7:
 	case 0x8:
-	case 0x9:
+	case 0x9: return;
 	case 0xa:
-	case 0xb: return;
+	case 0xb: skip = hdr & 0x1f; break;
 	case 0xc: switch(hdr & 0xf) {
 		case 0x0:
 		case 0x1:
@@ -1787,7 +1787,7 @@ static inline void packmsg_skip_object(packmsg_input_t *buf) {
 			packmsg_skip_object(buf);
 		}
 	} else {
-		packmsg_skip_object(buf);
+		packmsg_skip_element(buf);
 	}
 }
 

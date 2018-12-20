@@ -1733,17 +1733,17 @@ static inline void packmsg_skip_element(packmsg_input_t *buf) {
 		case 0x9: skip = -1; break;
 		case 0xa: skip = -2; break;
 		case 0xb: skip = -4; break;
-		case 0xc: skip = -2; break;
-		case 0xd: skip = -4; break;
-		case 0xe: skip = -2; break;
-		case 0xf: skip = -4; break;
+		case 0xc: skip = 2; break;
+		case 0xd: skip = 4; break;
+		case 0xe: skip = 2; break;
+		case 0xf: skip = 4; break;
 		}
 		break;
 	case 0xe:
 	case 0xf: return;
 	}
 
-	uint32_t dlen;
+	uint32_t dlen = 0;
 
 	if(skip < 0) {
 		packmsg_read_data_(buf, &dlen, -skip);

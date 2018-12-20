@@ -385,6 +385,9 @@ END_TEST
 	packmsg_input_t in = {(uint8_t *)buf, size};\
 	statement;\
 	ck_assert(packmsg_done(&in));\
+	packmsg_input_t in2 = {(uint8_t *)buf, size};\
+	packmsg_skip_element(&in2);\
+	assert(packmsg_done(&in2));\
 }
 
 #define TEST_INPUT_FAILURE(statement, buf, size) {\

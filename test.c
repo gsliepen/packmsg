@@ -8,7 +8,7 @@
 #define TEST_OUTPUT(statement, expected, size) {\
 	uint8_t buf[size + 64];\
 	memcpy(buf + size, "Canary!", 8);\
-	struct packmsg_output out = {buf, size};\
+	packmsg_output_t out = {buf, size};\
 	statement;\
 	char filename[100];\
 	snprintf(filename, sizeof filename, "fuzz-in/testcase-%d", __LINE__);\
@@ -382,13 +382,13 @@ START_TEST(add_ext)
 END_TEST
 
 #define TEST_INPUT(statement, buf, size) {\
-	struct packmsg_input in = {(uint8_t *)buf, size};\
+	packmsg_input_t in = {(uint8_t *)buf, size};\
 	statement;\
 	ck_assert(packmsg_done(&in));\
 }
 
 #define TEST_INPUT_FAILURE(statement, buf, size) {\
-	struct packmsg_input in = {(uint8_t *)buf, size};\
+	packmsg_input_t in = {(uint8_t *)buf, size};\
 	statement;\
 	ck_assert(!packmsg_done(&in));\
 }
@@ -777,14 +777,14 @@ END_TEST
 #define TEST_INPUT_STRING(hdrsize, size, str) {\
 	const char *inbuf = (const char *)str;\
 \
-	struct packmsg_input in1 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in1 = {(uint8_t *)inbuf, hdrsize + size};\
 	const char *rawptr = NULL;\
 	ck_assert_int_eq(packmsg_get_str_raw(&in1, &rawptr), size);\
 	ck_assert(packmsg_done(&in1));\
 	ck_assert_ptr_nonnull(rawptr);\
 	ck_assert_mem_eq(rawptr, inbuf + hdrsize, size);\
 \
-	struct packmsg_input in2 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in2 = {(uint8_t *)inbuf, hdrsize + size};\
 	char *dupptr = packmsg_get_str_dup(&in2);\
 	ck_assert_ptr_nonnull(dupptr);\
 	ck_assert(packmsg_done(&in2));\
@@ -792,7 +792,7 @@ END_TEST
 	ck_assert(dupptr[size] == 0);\
 	free(dupptr);\
 \
-	struct packmsg_input in3 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in3 = {(uint8_t *)inbuf, hdrsize + size};\
 	char outbuf[size + 1 + 64];\
 	memcpy(outbuf + size + 1, "Canary!", 8);\
 	ck_assert_int_eq(packmsg_get_str_copy(&in3, &outbuf, size + 1), size);\
@@ -801,24 +801,24 @@ END_TEST
 	ck_assert(outbuf[size] == 0);\
 	ck_assert_mem_eq(outbuf + size + 1, "Canary!", 8);\
 \
-	struct packmsg_input in4 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in4 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	ck_assert_int_eq(packmsg_get_str_raw(&in4, &rawptr), 0);\
 	ck_assert_ptr_null(rawptr);\
 	ck_assert(!packmsg_done(&in4));\
 \
-	struct packmsg_input in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	dupptr = packmsg_get_str_dup(&in5);\
 	ck_assert_ptr_null(dupptr);\
 	ck_assert(!packmsg_done(&in5));\
 \
-	struct packmsg_input in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	memcpy(outbuf, "Canary!", 8);\
 	ck_assert_int_eq(packmsg_get_str_copy(&in6, &outbuf, size), 0);\
 	ck_assert(!packmsg_done(&in6));\
 	ck_assert_mem_eq(outbuf, size ? "\0anary!" : "Canary!", 8);\
 \
 	if (size) {\
-		struct packmsg_input in7 = {(uint8_t *)inbuf, hdrsize + size};\
+		packmsg_input_t in7 = {(uint8_t *)inbuf, hdrsize + size};\
 		memcpy(outbuf, "Canary!", 8);\
 		ck_assert_int_eq(packmsg_get_str_copy(&in7, &outbuf, size - 1), 0);\
 		ck_assert(!packmsg_done(&in7));\
@@ -873,14 +873,14 @@ END_TEST
 #define TEST_INPUT_BIN(hdrsize, size, bin) {\
 	const char *inbuf = (const char *)bin;\
 \
-	struct packmsg_input in1 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in1 = {(uint8_t *)inbuf, hdrsize + size};\
 	const void *rawptr = NULL;\
 	ck_assert_int_eq(packmsg_get_bin_raw(&in1, &rawptr), size);\
 	ck_assert(packmsg_done(&in1));\
 	ck_assert_ptr_nonnull(rawptr);\
 	ck_assert_mem_eq(rawptr, inbuf + hdrsize, size);\
 \
-	struct packmsg_input in2 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in2 = {(uint8_t *)inbuf, hdrsize + size};\
 	uint32_t len;\
 	void *dupptr = packmsg_get_bin_dup(&in2, &len);\
 	ck_assert_ptr_nonnull(dupptr);\
@@ -889,7 +889,7 @@ END_TEST
 	ck_assert_mem_eq(dupptr, inbuf + hdrsize, size);\
 	free(dupptr);\
 \
-	struct packmsg_input in3 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in3 = {(uint8_t *)inbuf, hdrsize + size};\
 	char outbuf[size + 64];\
 	memcpy(outbuf + size, "Canary!", 8);\
 	ck_assert_int_eq(packmsg_get_bin_copy(&in3, &outbuf, size + 1), size);\
@@ -897,25 +897,25 @@ END_TEST
 	ck_assert_mem_eq(outbuf, inbuf + hdrsize, size);\
 	ck_assert_mem_eq(outbuf + size, "Canary!", 8);\
 \
-	struct packmsg_input in4 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in4 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	ck_assert_int_eq(packmsg_get_bin_raw(&in4, &rawptr), 0);\
 	ck_assert_ptr_null(rawptr);\
 	ck_assert(!packmsg_done(&in4));\
 \
-	struct packmsg_input in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	dupptr = packmsg_get_bin_dup(&in5, &len);\
 	ck_assert_ptr_null(dupptr);\
 	ck_assert_int_eq(len, 0);\
 	ck_assert(!packmsg_done(&in5));\
 \
-	struct packmsg_input in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	memcpy(outbuf, "Canary!", 8);\
 	ck_assert_int_eq(packmsg_get_bin_copy(&in6, &outbuf, size), 0);\
 	ck_assert(!packmsg_done(&in6));\
 	ck_assert_mem_eq(outbuf, "Canary!", 8);\
 \
 	if (size) {\
-		struct packmsg_input in7 = {(uint8_t *)inbuf, hdrsize + size};\
+		packmsg_input_t in7 = {(uint8_t *)inbuf, hdrsize + size};\
 		memcpy(outbuf, "Canary!", 8);\
 		ck_assert_int_eq(packmsg_get_bin_copy(&in7, &outbuf, size - 1), 0);\
 		ck_assert(!packmsg_done(&in7));\
@@ -965,7 +965,7 @@ END_TEST
 	const char *inbuf = (const char *)bin;\
 	int8_t type;\
 \
-	struct packmsg_input in1 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in1 = {(uint8_t *)inbuf, hdrsize + size};\
 	const void *rawptr = NULL;\
 	ck_assert_int_eq(packmsg_get_ext_raw(&in1, &type, &rawptr), size);\
 	ck_assert(packmsg_done(&in1));\
@@ -973,7 +973,7 @@ END_TEST
 	ck_assert_ptr_nonnull(rawptr);\
 	ck_assert_mem_eq(rawptr, inbuf + hdrsize, size);\
 \
-	struct packmsg_input in2 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in2 = {(uint8_t *)inbuf, hdrsize + size};\
 	uint32_t len;\
 	void *dupptr = packmsg_get_ext_dup(&in2, &type, &len);\
 	ck_assert(packmsg_done(&in2));\
@@ -983,7 +983,7 @@ END_TEST
 	ck_assert_mem_eq(dupptr, inbuf + hdrsize, size);\
 	free(dupptr);\
 \
-	struct packmsg_input in3 = {(uint8_t *)inbuf, hdrsize + size};\
+	packmsg_input_t in3 = {(uint8_t *)inbuf, hdrsize + size};\
 	char outbuf[size + 64];\
 	memcpy(outbuf + size, "Canary!", 8);\
 	ck_assert_int_eq(packmsg_get_ext_copy(&in3, &type, &outbuf, size + 1), size);\
@@ -992,19 +992,19 @@ END_TEST
 	ck_assert_mem_eq(outbuf, inbuf + hdrsize, size);\
 	ck_assert_mem_eq(outbuf + size, "Canary!", 8);\
 \
-	struct packmsg_input in4 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in4 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	ck_assert_int_eq(packmsg_get_ext_raw(&in4, &type, &rawptr), 0);\
 	ck_assert_ptr_null(rawptr);\
 	ck_assert_int_eq(type, 0);\
 	ck_assert(!packmsg_done(&in4));\
 \
-	struct packmsg_input in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in5 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	dupptr = packmsg_get_ext_dup(&in5, &type, &len);\
 	ck_assert_ptr_null(dupptr);\
 	ck_assert_int_eq(len, 0);\
 	ck_assert(!packmsg_done(&in5));\
 \
-	struct packmsg_input in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
+	packmsg_input_t in6 = {(uint8_t *)inbuf, hdrsize + size - 1};\
 	memcpy(outbuf, "Canary!", 8);\
 	ck_assert_int_eq(packmsg_get_ext_copy(&in6, &type, &outbuf, size), 0);\
 	ck_assert_int_eq(type, 0);\
@@ -1012,7 +1012,7 @@ END_TEST
 	ck_assert_mem_eq(outbuf, "Canary!", 8);\
 \
 	if (size) {\
-		struct packmsg_input in7 = {(uint8_t *)inbuf, hdrsize + size};\
+		packmsg_input_t in7 = {(uint8_t *)inbuf, hdrsize + size};\
 		memcpy(outbuf, "Canary!", 8);\
 		ck_assert_int_eq(packmsg_get_ext_copy(&in7, &type, &outbuf, size - 1), 0);\
 		ck_assert_int_eq(type, 0);\
@@ -1067,14 +1067,14 @@ END_TEST
 
 #define TEST_INPUT_FIXEXT(size, ext, data) {\
 	const char *buf = data;\
-	struct packmsg_input in1 = {(uint8_t *)buf, size + 2};\
+	packmsg_input_t in1 = {(uint8_t *)buf, size + 2};\
 	const void *rawptr;\
 	int8_t type;\
 	ck_assert_int_eq(packmsg_get_ext_raw(&in1, &type, &rawptr), size);\
 	ck_assert(packmsg_done(&in1));\
 	ck_assert_ptr_nonnull(rawptr);\
 	ck_assert_mem_eq(rawptr, buf + 2, size);\
-	struct packmsg_input in2 = {(uint8_t *)buf, size + 1};\
+	packmsg_input_t in2 = {(uint8_t *)buf, size + 1};\
 	ck_assert_int_eq(packmsg_get_ext_raw(&in2, &type, &rawptr), 0);\
 	ck_assert_int_eq(type, 0);\
 	ck_assert_ptr_null(rawptr);\

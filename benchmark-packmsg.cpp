@@ -6,7 +6,7 @@ void packmsg_encode_nil(benchmark::State &state) {
 	uint8_t buf[1];
 
 	for (auto _: state) {
-		struct packmsg_output out = {buf, sizeof buf};
+		packmsg_output_t out = {buf, sizeof buf};
 
 		packmsg_add_nil(&out);
 
@@ -19,7 +19,7 @@ void packmsg_decode_nil(benchmark::State &state) {
 	const uint8_t buf[1] = {0xc0};
 
 	for (auto _: state) {
-		struct packmsg_input in = {buf, sizeof buf};
+		packmsg_input_t in = {buf, sizeof buf};
 
 		packmsg_get_nil(&in);
 
@@ -32,7 +32,7 @@ void packmsg_encode_hello(benchmark::State &state) {
 	uint8_t buf[18];
 
 	for (auto _: state) {
-		struct packmsg_output out = {buf, sizeof buf};
+		packmsg_output_t out = {buf, sizeof buf};
 
 		packmsg_add_array(&out, 2);
 		packmsg_add_str(&out, "compact");
@@ -49,7 +49,7 @@ void packmsg_decode_hello(benchmark::State &state) {
 	const uint8_t buf[18] = "\x82\xa7" "compact" "\xc3\xa6" "schema";
 
 	for (auto _: state) {
-		struct packmsg_input in = {buf, sizeof buf};
+		packmsg_input_t in = {buf, sizeof buf};
 		const char *key1;
 		const char *key2;
 

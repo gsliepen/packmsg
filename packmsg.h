@@ -69,13 +69,13 @@ extern "C" {
  *
  * ## API overview
  *
- * For encoding, a struct packmsg_output variable must be initialized
+ * For encoding, a packmsg_output_t variable must be initialized
  * with a pointer to the start of an output buffer, and its size.
  * Elements can then be encoded using packmsg_add_*() functions.
  * When all desired elements have been added, the length of the encoded message
  * can be retrieved using the packmsg_output_size() function.
  *
- * For decoding, a struct packmsg_input variable must be initialized
+ * For decoding, a packmsg_input_t variable must be initialized
  * with a const pointer to the start of an input buffer, and its size.
  * Elements can then be decoded using packmsg_get_*() functions.
  * If the type of elements in a message is not known up front, then
@@ -104,10 +104,10 @@ extern "C" {
  * and the length of that buffer. A pointer to it is passed to all
  * packmsg_add_*() functions.
  */
-struct packmsg_output {
+typedef struct packmsg_output {
 	uint8_t *ptr;  /**< A pointer into a buffer. */
 	ptrdiff_t len; /**< The remaining length of the buffer, or -1 in case of errors. */
-};
+} packmsg_output_t;
 
 /** \brief Iterator for PackMessage input.
  *
@@ -116,10 +116,10 @@ struct packmsg_output {
  * and the length of that buffer. A pointer to it is passed to all
  * packmsg_get_*() functions.
  */
-struct packmsg_input {
+typedef struct packmsg_input {
 	const uint8_t *ptr; /**< A pointer into a buffer. */
 	ptrdiff_t len;      /**< The remaining length of the buffer, or -1 in case of errors. */
-};
+} packmsg_input_t;
 
 /* Checks
  * ======
@@ -136,7 +136,7 @@ struct packmsg_input {
  * \return     True if all write operations performed on the output buffer so far have completed successfully,
  *             false if any error has occurred.
  */
-static inline bool packmsg_output_ok(const struct packmsg_output *buf)
+static inline bool packmsg_output_ok(const packmsg_output_t *buf)
 {
 	assert(buf);
 
@@ -155,7 +155,7 @@ static inline bool packmsg_output_ok(const struct packmsg_output *buf)
  * \return       The total amount of bytes written to the output buffer,
  *               or 0 if any error has occurred.
  */
-static inline size_t packmsg_output_size(const struct packmsg_output *buf, const uint8_t *start)
+static inline size_t packmsg_output_size(const packmsg_output_t *buf, const uint8_t *start)
 {
 	if (likely(packmsg_output_ok(buf)))
 		return buf->ptr - start;
@@ -174,7 +174,7 @@ static inline size_t packmsg_output_size(const struct packmsg_output *buf, const
  * \return     True if all read operations performed on the input buffer so far have completed successfully,
  *             false if any error has occurred.
  */
-static inline bool packmsg_input_ok(const struct packmsg_input *buf)
+static inline bool packmsg_input_ok(const packmsg_input_t *buf)
 {
 	assert(buf);
 
@@ -194,7 +194,7 @@ static inline bool packmsg_input_ok(const struct packmsg_input *buf)
  *             false if there is still data remaining in the input buffer,
  *             or if any error has occurred.
  */
-static inline bool packmsg_done(const struct packmsg_input *buf)
+static inline bool packmsg_done(const packmsg_input_t *buf)
 {
 	assert(buf);
 
@@ -213,7 +213,7 @@ static inline bool packmsg_done(const struct packmsg_input *buf)
  *
  * \param buf  A pointer to an output buffer iterator.
  */
-static inline void packmsg_output_invalidate(struct packmsg_output *buf) {
+static inline void packmsg_output_invalidate(packmsg_output_t *buf) {
 	buf->len = -1;
 }
 
@@ -225,7 +225,7 @@ static inline void packmsg_output_invalidate(struct packmsg_output *buf) {
  *
  * \param buf  A pointer to an input buffer iterator.
  */
-static inline void packmsg_input_invalidate(struct packmsg_input *buf) {
+static inline void packmsg_input_invalidate(packmsg_input_t *buf) {
 	buf->len = -1;
 }
 
@@ -234,7 +234,7 @@ static inline void packmsg_input_invalidate(struct packmsg_input *buf) {
  */
 
 /** \brief Internal function, do not use. */
-static inline void packmsg_write_hdr_(struct packmsg_output *buf, uint8_t hdr)
+static inline void packmsg_write_hdr_(packmsg_output_t *buf, uint8_t hdr)
 {
 	assert(buf);
 	assert(buf->ptr);
@@ -249,7 +249,7 @@ static inline void packmsg_write_hdr_(struct packmsg_output *buf, uint8_t hdr)
 }
 
 /** \brief Internal function, do not use. */
-static inline void packmsg_write_data_(struct packmsg_output *buf, const void *data, uint32_t dlen)
+static inline void packmsg_write_data_(packmsg_output_t *buf, const void *data, uint32_t dlen)
 {
 	assert(buf);
 	assert(buf->ptr);
@@ -265,7 +265,7 @@ static inline void packmsg_write_data_(struct packmsg_output *buf, const void *d
 }
 
 /** \brief Internal function, do not use. */
-static inline void packmsg_write_hdrdata_(struct packmsg_output *buf, uint8_t hdr, const void *data, uint32_t dlen)
+static inline void packmsg_write_hdrdata_(packmsg_output_t *buf, uint8_t hdr, const void *data, uint32_t dlen)
 {
 	assert(buf);
 	assert(buf->ptr);
@@ -289,7 +289,7 @@ static inline void packmsg_write_hdrdata_(struct packmsg_output *buf, uint8_t hd
  *
  * \param buf  A pointer to an output buffer iterator.
  */
-static inline void packmsg_add_nil(struct packmsg_output *buf)
+static inline void packmsg_add_nil(packmsg_output_t *buf)
 {
 	packmsg_write_hdr_(buf, 0xc0);
 }
@@ -300,7 +300,7 @@ static inline void packmsg_add_nil(struct packmsg_output *buf)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_bool(struct packmsg_output *buf, bool val)
+static inline void packmsg_add_bool(packmsg_output_t *buf, bool val)
 {
 	packmsg_write_hdr_(buf, val ? 0xc3 : 0xc2);
 }
@@ -311,7 +311,7 @@ static inline void packmsg_add_bool(struct packmsg_output *buf, bool val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_int8(struct packmsg_output *buf, int8_t val)
+static inline void packmsg_add_int8(packmsg_output_t *buf, int8_t val)
 {
 	if (val >= -32)		// fixint
 		packmsg_write_hdr_(buf, val);
@@ -325,7 +325,7 @@ static inline void packmsg_add_int8(struct packmsg_output *buf, int8_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_int16(struct packmsg_output *buf, int16_t val)
+static inline void packmsg_add_int16(packmsg_output_t *buf, int16_t val)
 {
 	if ((int8_t) val != val)
 		packmsg_write_hdrdata_(buf, 0xd1, &val, 2);
@@ -339,7 +339,7 @@ static inline void packmsg_add_int16(struct packmsg_output *buf, int16_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_int32(struct packmsg_output *buf, int32_t val)
+static inline void packmsg_add_int32(packmsg_output_t *buf, int32_t val)
 {
 	if ((int16_t) val != val)
 		packmsg_write_hdrdata_(buf, 0xd2, &val, 4);
@@ -353,7 +353,7 @@ static inline void packmsg_add_int32(struct packmsg_output *buf, int32_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_int64(struct packmsg_output *buf, int64_t val)
+static inline void packmsg_add_int64(packmsg_output_t *buf, int64_t val)
 {
 	if ((int32_t) val != val)
 		packmsg_write_hdrdata_(buf, 0xd3, &val, 8);
@@ -367,7 +367,7 @@ static inline void packmsg_add_int64(struct packmsg_output *buf, int64_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_uint8(struct packmsg_output *buf, uint8_t val)
+static inline void packmsg_add_uint8(packmsg_output_t *buf, uint8_t val)
 {
 	if (val < 0x80)		// fixint
 		packmsg_write_hdr_(buf, val);
@@ -381,7 +381,7 @@ static inline void packmsg_add_uint8(struct packmsg_output *buf, uint8_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_uint16(struct packmsg_output *buf, uint16_t val)
+static inline void packmsg_add_uint16(packmsg_output_t *buf, uint16_t val)
 {
 	if (val & 0xff00)
 		packmsg_write_hdrdata_(buf, 0xcd, &val, 2);
@@ -395,7 +395,7 @@ static inline void packmsg_add_uint16(struct packmsg_output *buf, uint16_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_uint32(struct packmsg_output *buf, uint32_t val)
+static inline void packmsg_add_uint32(packmsg_output_t *buf, uint32_t val)
 {
 	if (val & 0xffff0000)
 		packmsg_write_hdrdata_(buf, 0xce, &val, 4);
@@ -409,7 +409,7 @@ static inline void packmsg_add_uint32(struct packmsg_output *buf, uint32_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_uint64(struct packmsg_output *buf, uint64_t val)
+static inline void packmsg_add_uint64(packmsg_output_t *buf, uint64_t val)
 {
 	if (val & 0xffffffff00000000)
 		packmsg_write_hdrdata_(buf, 0xcf, &val, 8);
@@ -423,7 +423,7 @@ static inline void packmsg_add_uint64(struct packmsg_output *buf, uint64_t val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_float(struct packmsg_output *buf, float val)
+static inline void packmsg_add_float(packmsg_output_t *buf, float val)
 {
 	packmsg_write_hdrdata_(buf, 0xca, &val, 4);
 }
@@ -434,7 +434,7 @@ static inline void packmsg_add_float(struct packmsg_output *buf, float val)
  * \param buf  A pointer to an output buffer iterator.
  * \param val  The value to add.
  */
-static inline void packmsg_add_double(struct packmsg_output *buf, double val)
+static inline void packmsg_add_double(packmsg_output_t *buf, double val)
 {
 	packmsg_write_hdrdata_(buf, 0xcb, &val, 8);
 }
@@ -445,7 +445,7 @@ static inline void packmsg_add_double(struct packmsg_output *buf, double val)
  * \param buf  A pointer to an output buffer iterator.
  * \param str  The string to add. This must be a NUL-terminated string.
  */
-static inline void packmsg_add_str(struct packmsg_output *buf, const char *str)
+static inline void packmsg_add_str(packmsg_output_t *buf, const char *str)
 {
 	size_t slen = strlen(str);
 	if (slen < 32) {
@@ -470,7 +470,7 @@ static inline void packmsg_add_str(struct packmsg_output *buf, const char *str)
  * \param data  A pointer to the data to add.
  * \param dlen  The length of the data in bytes.
  */
-static inline void packmsg_add_bin(struct packmsg_output *buf, const void *data, uint32_t dlen)
+static inline void packmsg_add_bin(packmsg_output_t *buf, const void *data, uint32_t dlen)
 {
 	if (dlen <= 0xff) {
 		packmsg_write_hdrdata_(buf, 0xc4, &dlen, 1);
@@ -494,7 +494,7 @@ static inline void packmsg_add_bin(struct packmsg_output *buf, const void *data,
  * \param data  A pointer to the data to add.
  * \param dlen  The length of the data in bytes.
  */
-static inline void packmsg_add_ext(struct packmsg_output *buf, int8_t type, const void *data, uint32_t dlen)
+static inline void packmsg_add_ext(packmsg_output_t *buf, int8_t type, const void *data, uint32_t dlen)
 {
 	if (dlen <= 0xff) {
 		if (dlen == 16) {
@@ -535,7 +535,7 @@ static inline void packmsg_add_ext(struct packmsg_output *buf, int8_t type, cons
  * \param buf    A pointer to an output buffer iterator.
  * \param count  The number of elements in the map.
  */
-static inline void packmsg_add_map(struct packmsg_output *buf, uint32_t count)
+static inline void packmsg_add_map(packmsg_output_t *buf, uint32_t count)
 {
 	if (count <= 0xf) {
 		packmsg_write_hdr_(buf, 0x80 | (uint8_t) count);
@@ -557,7 +557,7 @@ static inline void packmsg_add_map(struct packmsg_output *buf, uint32_t count)
  * \param buf    A pointer to an output buffer iterator.
  * \param count  The number of elements in the array.
  */
-static inline void packmsg_add_array(struct packmsg_output *buf, uint32_t count)
+static inline void packmsg_add_array(packmsg_output_t *buf, uint32_t count)
 {
 	if (count <= 0xf) {
 		packmsg_write_hdr_(buf, 0x90 | (uint8_t) count);
@@ -573,7 +573,7 @@ static inline void packmsg_add_array(struct packmsg_output *buf, uint32_t count)
  */
 
 /** \brief Internal function, do not use. */
-static inline uint8_t packmsg_read_hdr_(struct packmsg_input *buf)
+static inline uint8_t packmsg_read_hdr_(packmsg_input_t *buf)
 {
 	assert(buf);
 	assert(buf->ptr);
@@ -590,7 +590,7 @@ static inline uint8_t packmsg_read_hdr_(struct packmsg_input *buf)
 }
 
 /** \brief Internal function, do not use. */
-static inline void packmsg_read_data_(struct packmsg_input *buf, void *data, uint32_t dlen)
+static inline void packmsg_read_data_(packmsg_input_t *buf, void *data, uint32_t dlen)
 {
 	assert(buf);
 	assert(buf->ptr);
@@ -606,7 +606,7 @@ static inline void packmsg_read_data_(struct packmsg_input *buf, void *data, uin
 }
 
 /** \brief Internal function, do not use. */
-static inline uint8_t packmsg_peek_hdr_(const struct packmsg_input *buf)
+static inline uint8_t packmsg_peek_hdr_(const packmsg_input_t *buf)
 {
 	assert(buf);
 	assert(buf->ptr);
@@ -626,7 +626,7 @@ static inline uint8_t packmsg_peek_hdr_(const struct packmsg_input *buf)
  *
  * \param buf  A pointer to an input buffer iterator.
  */
-static inline void packmsg_get_nil(struct packmsg_input *buf)
+static inline void packmsg_get_nil(packmsg_input_t *buf)
 {
 	if (packmsg_read_hdr_(buf) != 0xc0)
 		packmsg_input_invalidate(buf);
@@ -640,7 +640,7 @@ static inline void packmsg_get_nil(struct packmsg_input *buf)
  * \return     The boolean value that was read from the input,
  *             or false in case of an error.
  */
-static inline bool packmsg_get_bool(struct packmsg_input *buf)
+static inline bool packmsg_get_bool(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 
@@ -661,7 +661,7 @@ static inline bool packmsg_get_bool(struct packmsg_input *buf)
  * \return     The int8 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline int8_t packmsg_get_int8(struct packmsg_input *buf)
+static inline int8_t packmsg_get_int8(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80 || hdr >= 0xe0) {
@@ -681,7 +681,7 @@ static inline int8_t packmsg_get_int8(struct packmsg_input *buf)
  * \return     The int16 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline int16_t packmsg_get_int16(struct packmsg_input *buf)
+static inline int16_t packmsg_get_int16(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80 || hdr >= 0xe0) {
@@ -705,7 +705,7 @@ static inline int16_t packmsg_get_int16(struct packmsg_input *buf)
  * \return     The int32 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline int32_t packmsg_get_int32(struct packmsg_input *buf)
+static inline int32_t packmsg_get_int32(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80 || hdr >= 0xe0) {
@@ -733,7 +733,7 @@ static inline int32_t packmsg_get_int32(struct packmsg_input *buf)
  * \return     The int64 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline int64_t packmsg_get_int64(struct packmsg_input *buf)
+static inline int64_t packmsg_get_int64(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80 || hdr >= 0xe0) {
@@ -765,7 +765,7 @@ static inline int64_t packmsg_get_int64(struct packmsg_input *buf)
  * \return     The uint8 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline uint8_t packmsg_get_uint8(struct packmsg_input *buf)
+static inline uint8_t packmsg_get_uint8(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80) {
@@ -785,7 +785,7 @@ static inline uint8_t packmsg_get_uint8(struct packmsg_input *buf)
  * \return     The uint16 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline uint16_t packmsg_get_uint16(struct packmsg_input *buf)
+static inline uint16_t packmsg_get_uint16(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80) {
@@ -809,7 +809,7 @@ static inline uint16_t packmsg_get_uint16(struct packmsg_input *buf)
  * \return     The uint32 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_uint32(struct packmsg_input *buf)
+static inline uint32_t packmsg_get_uint32(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80) {
@@ -837,7 +837,7 @@ static inline uint32_t packmsg_get_uint32(struct packmsg_input *buf)
  * \return     The uint64 value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline uint64_t packmsg_get_uint64(struct packmsg_input *buf)
+static inline uint64_t packmsg_get_uint64(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr < 0x80) {
@@ -869,7 +869,7 @@ static inline uint64_t packmsg_get_uint64(struct packmsg_input *buf)
  * \return     The float value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline float packmsg_get_float(struct packmsg_input *buf)
+static inline float packmsg_get_float(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr == 0xca) {
@@ -889,7 +889,7 @@ static inline float packmsg_get_float(struct packmsg_input *buf)
  * \return     The float value that was read from the input,
  *             or 0 in case of an error.
  */
-static inline double packmsg_get_double(struct packmsg_input *buf)
+static inline double packmsg_get_double(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if (hdr == 0xcb) {
@@ -919,7 +919,7 @@ static inline double packmsg_get_double(struct packmsg_input *buf)
  * \return          The size of the string in bytes,
  *                  or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_str_raw(struct packmsg_input *buf, const char **str)
+static inline uint32_t packmsg_get_str_raw(packmsg_input_t *buf, const char **str)
 {
 	assert(str);
 
@@ -964,7 +964,7 @@ static inline uint32_t packmsg_get_str_raw(struct packmsg_input *buf, const char
  * \return      A pointer to the newly allocated buffer containing a NUL-terminated string,
  *              or NULL in case of an error.
  */
-static inline char *packmsg_get_str_dup(struct packmsg_input *buf)
+static inline char *packmsg_get_str_dup(packmsg_input_t *buf)
 {
 	const char *str;
 	uint32_t slen = packmsg_get_str_raw(buf, &str);
@@ -998,7 +998,7 @@ static inline char *packmsg_get_str_dup(struct packmsg_input *buf)
  * \return      The size of the string in bytes,
  *              or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_str_copy(struct packmsg_input *buf, void *data, uint32_t dlen)
+static inline uint32_t packmsg_get_str_copy(packmsg_input_t *buf, void *data, uint32_t dlen)
 {
 	assert(data);
 
@@ -1035,7 +1035,7 @@ static inline uint32_t packmsg_get_str_copy(struct packmsg_input *buf, void *dat
  * \return           The size of the data in bytes,
  *                   or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_bin_raw(struct packmsg_input *buf, const void **data)
+static inline uint32_t packmsg_get_bin_raw(packmsg_input_t *buf, const void **data)
 {
 	assert(data);
 
@@ -1079,7 +1079,7 @@ static inline uint32_t packmsg_get_bin_raw(struct packmsg_input *buf, const void
  * \return           A pointer to the newly allocated buffer containing the binary data,
  *                   or NULL in case of an error.
  */
-static inline void *packmsg_get_bin_dup(struct packmsg_input *buf, uint32_t *dlen)
+static inline void *packmsg_get_bin_dup(packmsg_input_t *buf, uint32_t *dlen)
 {
 	const void *data;
 	*dlen = packmsg_get_bin_raw(buf, &data);
@@ -1111,7 +1111,7 @@ static inline void *packmsg_get_bin_dup(struct packmsg_input *buf, uint32_t *dle
  * \return      The size of the binary data in bytes,
  *              or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_bin_copy(struct packmsg_input *buf, void *rawbuf, uint32_t rlen)
+static inline uint32_t packmsg_get_bin_copy(packmsg_input_t *buf, void *rawbuf, uint32_t rlen)
 {
 	assert(rawbuf);
 
@@ -1147,7 +1147,7 @@ static inline uint32_t packmsg_get_bin_copy(struct packmsg_input *buf, void *raw
  * \return           The size of the data in bytes,
  *                   or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t *type, const void **data)
+static inline uint32_t packmsg_get_ext_raw(packmsg_input_t *buf, int8_t *type, const void **data)
 {
 	assert(type);
 	assert(data);
@@ -1201,7 +1201,7 @@ static inline uint32_t packmsg_get_ext_raw(struct packmsg_input *buf, int8_t *ty
  * \return           A pointer to the newly allocated buffer containing the extension data,
  *                   or NULL in case of an error.
  */
-static inline void *packmsg_get_ext_dup(struct packmsg_input *buf, int8_t *type, uint32_t *dlen)
+static inline void *packmsg_get_ext_dup(packmsg_input_t *buf, int8_t *type, uint32_t *dlen)
 {
 	assert(type);
 
@@ -1240,7 +1240,7 @@ static inline void *packmsg_get_ext_dup(struct packmsg_input *buf, int8_t *type,
  * \return           The size of the extension data in bytes,
  *                   or 0 in case of an error.
  */
-static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t *type, void *rawbuf, uint32_t rlen)
+static inline uint32_t packmsg_get_ext_copy(packmsg_input_t *buf, int8_t *type, void *rawbuf, uint32_t rlen)
 {
 	assert(type);
 	assert(rawbuf);
@@ -1274,7 +1274,7 @@ static inline uint32_t packmsg_get_ext_copy(struct packmsg_input *buf, int8_t *t
  *
  * \return       The number of key-value pairs in the map.
  */
-static inline uint32_t packmsg_get_map(struct packmsg_input *buf)
+static inline uint32_t packmsg_get_map(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if ((hdr & 0xf0) == 0x80) {
@@ -1305,7 +1305,7 @@ static inline uint32_t packmsg_get_map(struct packmsg_input *buf)
  *
  * \return       The number of elements in the array.
  */
-static inline uint32_t packmsg_get_array(struct packmsg_input *buf)
+static inline uint32_t packmsg_get_array(packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	if ((hdr & 0xf0) == 0x90) {
@@ -1373,7 +1373,7 @@ enum packmsg_type {
  * \return True if the next element can be read by packmsg_get_nil(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_nil(const struct packmsg_input *buf)
+static inline bool packmsg_is_nil(const packmsg_input_t *buf)
 {
 	return packmsg_peek_hdr_(buf) == 0xc0;
 }
@@ -1386,7 +1386,7 @@ static inline bool packmsg_is_nil(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_nil(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_bool(const struct packmsg_input *buf)
+static inline bool packmsg_is_bool(const packmsg_input_t *buf)
 {
 	return (packmsg_peek_hdr_(buf) & 0xfe) == 0xc2;
 }
@@ -1399,7 +1399,7 @@ static inline bool packmsg_is_bool(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_int8(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_int8(const struct packmsg_input *buf)
+static inline bool packmsg_is_int8(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xd0;
@@ -1413,7 +1413,7 @@ static inline bool packmsg_is_int8(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_int16(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_int16(const struct packmsg_input *buf)
+static inline bool packmsg_is_int16(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xd0 || hdr == 0xd1;
@@ -1427,7 +1427,7 @@ static inline bool packmsg_is_int16(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_int32(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_int32(const struct packmsg_input *buf)
+static inline bool packmsg_is_int32(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xd0 || hdr == 0xd1 || hdr == 0xd2;
@@ -1441,7 +1441,7 @@ static inline bool packmsg_is_int32(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_int64(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_int64(const struct packmsg_input *buf)
+static inline bool packmsg_is_int64(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xd0 || hdr == 0xd1 || hdr == 0xd2 || hdr == 0xd3;
@@ -1455,7 +1455,7 @@ static inline bool packmsg_is_int64(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_uint8(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_uint8(const struct packmsg_input *buf)
+static inline bool packmsg_is_uint8(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xcc;
@@ -1469,7 +1469,7 @@ static inline bool packmsg_is_uint8(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_uint16(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_uint16(const struct packmsg_input *buf)
+static inline bool packmsg_is_uint16(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xcc || hdr == 0xcd;
@@ -1483,7 +1483,7 @@ static inline bool packmsg_is_uint16(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_uint32(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_uint32(const struct packmsg_input *buf)
+static inline bool packmsg_is_uint32(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xcc || hdr == 0xcd || hdr == 0xce;
@@ -1497,7 +1497,7 @@ static inline bool packmsg_is_uint32(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_uint64(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_uint64(const struct packmsg_input *buf)
+static inline bool packmsg_is_uint64(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr < 0x80 || hdr == 0xcc || hdr == 0xcd || hdr == 0xce || hdr == 0xcf;
@@ -1511,7 +1511,7 @@ static inline bool packmsg_is_uint64(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_float(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_float(const struct packmsg_input *buf)
+static inline bool packmsg_is_float(const packmsg_input_t *buf)
 {
 	return packmsg_peek_hdr_(buf) == 0xca;
 }
@@ -1524,7 +1524,7 @@ static inline bool packmsg_is_float(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_double(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_double(const struct packmsg_input *buf)
+static inline bool packmsg_is_double(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return hdr == 0xcb || hdr == 0xca;
@@ -1538,7 +1538,7 @@ static inline bool packmsg_is_double(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_str_*(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_str(const struct packmsg_input *buf)
+static inline bool packmsg_is_str(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return (hdr & 0xe0) == 0xa0 || hdr == 0xd9 || hdr == 0xda || hdr == 0xdb;
@@ -1552,7 +1552,7 @@ static inline bool packmsg_is_str(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_bin_*(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_bin(const struct packmsg_input *buf)
+static inline bool packmsg_is_bin(const packmsg_input_t *buf)
 {
 	return (packmsg_peek_hdr_(buf) & 0xfc) == 0xc4;
 }
@@ -1565,7 +1565,7 @@ static inline bool packmsg_is_bin(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_ext_*(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_ext(const struct packmsg_input *buf)
+static inline bool packmsg_is_ext(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return (hdr >= 0xc7 && hdr <= 0xc9) || (hdr >= 0xd4 && hdr <= 0xd8);
@@ -1579,7 +1579,7 @@ static inline bool packmsg_is_ext(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_map(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_map(const struct packmsg_input *buf)
+static inline bool packmsg_is_map(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return (hdr & 0xf0) == 0x80 || hdr == 0xde || hdr == 0xdf;
@@ -1593,7 +1593,7 @@ static inline bool packmsg_is_map(const struct packmsg_input *buf)
  * \return True if the next element can be read by packmsg_get_array(),
  *         false if not or if any other error occurred.
  */
-static inline bool packmsg_is_array(const struct packmsg_input *buf)
+static inline bool packmsg_is_array(const packmsg_input_t *buf)
 {
 	uint8_t hdr = packmsg_peek_hdr_(buf);
 	return (hdr & 0xf0) == 0x90 || hdr == 0xdc || hdr == 0xdd;
@@ -1612,7 +1612,7 @@ static inline bool packmsg_is_array(const struct packmsg_input *buf)
  *            are present in the input buffer, or PACKMSG_ERROR if the next element
  *            is invalid, or if any other error occurred.
  */
-static inline enum packmsg_type packmsg_get_type(const struct packmsg_input *buf) {
+static inline enum packmsg_type packmsg_get_type(const packmsg_input_t *buf) {
 	if (unlikely(packmsg_done(buf)))
 		return PACKMSG_DONE;
 
@@ -1684,7 +1684,7 @@ static inline enum packmsg_type packmsg_get_type(const struct packmsg_input *buf
  *
  * \param buf A pointer to an output buffer iterator.
  */
-static inline void packmsg_skip_element(struct packmsg_input *buf) {
+static inline void packmsg_skip_element(packmsg_input_t *buf) {
 	uint8_t hdr = packmsg_read_hdr_(buf);
 	ptrdiff_t skip = 0;
 
@@ -1772,7 +1772,7 @@ static inline void packmsg_skip_element(struct packmsg_input *buf) {
  *
  * \param buf A pointer to an output buffer iterator.
  */
-static inline void packmsg_skip_object(struct packmsg_input *buf) {
+static inline void packmsg_skip_object(packmsg_input_t *buf) {
 	if(packmsg_is_array(buf)) {
 		uint32_t count = packmsg_get_array(buf);
 

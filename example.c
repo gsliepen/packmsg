@@ -12,7 +12,7 @@ int main()
 
 	/* Example encoding */
 
-	struct packmsg_output out = {buf, sizeof buf};
+	packmsg_output_t out = {buf, sizeof buf};
 
 	packmsg_add_map(&out, 2);
 	packmsg_add_str(&out, "compact");
@@ -30,7 +30,7 @@ int main()
 
 	/* Example decoding */
 
-	struct packmsg_input in = {buf, len};
+	packmsg_input_t in = {buf, len};
 
 	uint32_t count = packmsg_get_map(&in);
 

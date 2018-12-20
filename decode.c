@@ -23,9 +23,9 @@
 
 #include "packmsg.h"
 
-static void decode_something(struct packmsg_input *in);
+static void decode_something(packmsg_input_t *in);
 
-static void decode_scalar(struct packmsg_input *in) {
+static void decode_scalar(packmsg_input_t *in) {
 	switch (packmsg_get_type(in)) {
 	case PACKMSG_ERROR:
 	case PACKMSG_DONE:
@@ -81,7 +81,7 @@ static void decode_scalar(struct packmsg_input *in) {
 	}
 }
 
-static void decode_array(struct packmsg_input *in) {
+static void decode_array(packmsg_input_t *in) {
 	uint32_t count = packmsg_get_array(in);
 	printf("{");
 	for (uint32_t i = 0; i < count && packmsg_input_ok(in); i++) {
@@ -92,7 +92,7 @@ static void decode_array(struct packmsg_input *in) {
 	printf("}");
 }
 
-static void decode_map(struct packmsg_input *in) {
+static void decode_map(packmsg_input_t *in) {
 	uint32_t count = packmsg_get_map(in);
 	printf("{");
 	for (uint32_t i = 0; i < count && packmsg_input_ok(in); i++) {
@@ -105,7 +105,7 @@ static void decode_map(struct packmsg_input *in) {
 	printf("}");
 }
 
-static void decode_something(struct packmsg_input *in) {
+static void decode_something(packmsg_input_t *in) {
 	if (packmsg_is_map(in))
 		decode_map(in);
 	else if (packmsg_is_array(in))
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
 
 	fclose(f);
 
-	struct packmsg_input in = {buf, size};
+	packmsg_input_t in = {buf, size};
 
 	while (!packmsg_done(&in)) {
 		if (!packmsg_input_ok(&in)) {

@@ -1647,6 +1647,122 @@ static inline enum packmsg_type packmsg_get_type(const struct packmsg_input *buf
 	}
 }
 
+/** \brief Skip one element in the input
+ *  \memberof packmsg_input
+ *
+ *  This function skips the next element in the input.
+ *  If the element is a map or an array, only the map or array header is skipped,
+ *  but not the contents of the map or array.
+ *
+ * \param buf A pointer to an output buffer iterator.
+ */
+static inline void packmsg_skip_element(struct packmsg_input *buf) {
+	uint8_t hdr = packmsg_read_hdr_(buf);
+	ptrdiff_t skip = 0;
+
+	switch(hdr >> 4) {
+	case 0x0:
+	case 0x1:
+	case 0x2:
+	case 0x3:
+	case 0x4:
+	case 0x5:
+	case 0x6:
+	case 0x7:
+	case 0x8:
+	case 0x9:
+	case 0xa:
+	case 0xb: return;
+	case 0xc: switch(hdr & 0xf) {
+		case 0x0:
+		case 0x1:
+		case 0x2:
+		case 0x3: return;
+		case 0x4: skip = -1; break;
+		case 0x5: skip = -2; break;
+		case 0x6: skip = -4; break;
+		case 0x7: skip = -1; break;
+		case 0x8: skip = -2; break;
+		case 0x9: skip = -4; break;
+		case 0xa: skip = 4; break;
+		case 0xb: skip = 8; break;
+		case 0xc: skip = 1; break;
+		case 0xd: skip = 2; break;
+		case 0xe: skip = 4; break;
+		case 0xf: skip = 8; break;
+		}
+		break;
+	case 0xd: switch(hdr & 0xf) {
+		case 0x0: skip = 1; break;
+		case 0x1: skip = 2; break;
+		case 0x2: skip = 4; break;
+		case 0x3: skip = 8; break;
+		case 0x4: skip = 2; break;
+		case 0x5: skip = 3; break;
+		case 0x6: skip = 5; break;
+		case 0x7: skip = 9; break;
+		case 0x8: skip = 17; break;
+		case 0x9: skip = -1; break;
+		case 0xa: skip = -2; break;
+		case 0xb: skip = -4; break;
+		case 0xc: skip = -2; break;
+		case 0xd: skip = -4; break;
+		case 0xe: skip = -2; break;
+		case 0xf: skip = -4; break;
+		}
+		break;
+	case 0xe:
+	case 0xf: return;
+	}
+
+	uint32_t dlen;
+
+	if(skip < 0) {
+		packmsg_read_data_(buf, &dlen, -skip);
+
+		if(hdr >= 0xc7 && hdr <= 0xc9)
+			dlen++;
+	} else {
+		dlen = skip;
+	}
+
+	if(likely(buf->len >= dlen)) {
+		buf->ptr += dlen;
+		buf->len -= dlen;
+	} else {
+		buf->len = -1;
+	}
+}
+
+/** \brief Skip one object in the input
+ *  \memberof packmsg_input
+ *
+ *  This function checks the type of the next element.
+ *  In case it is a scalar value (for example, an int or a string),
+ *  it skips just that scalar. If the next element is a map or an array,
+ *  it will recursively skip as many objects as there are in that map or array.
+ *
+ * \param buf A pointer to an output buffer iterator.
+ */
+static inline void packmsg_skip_object(struct packmsg_input *buf) {
+	if(packmsg_is_array(buf)) {
+		uint32_t count = packmsg_get_array(buf);
+
+		while(count-- && buf->len >= 0) {
+			packmsg_skip_object(buf);
+		}
+	} else if(packmsg_is_map(buf)) {
+		uint32_t count = packmsg_get_map(buf);
+
+		while(count-- && buf->len >= 0) {
+			packmsg_skip_object(buf);
+			packmsg_skip_object(buf);
+		}
+	} else {
+		packmsg_skip_object(buf);
+	}
+}
+
 #undef likely
 #undef unlikely
 

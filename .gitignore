@@ -1,6 +1,9 @@
 .*
 !.gitignore
+*.gcda
+*.gcno
 *.gch
+*.gcov
 *.o
 *~
 core

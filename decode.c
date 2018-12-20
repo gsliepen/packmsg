@@ -159,9 +159,8 @@ int main(int argc, char *argv[]) {
 		}
 
 		decode_something(&in);
+		printf("\n");
 	}
-
-	printf("\n");
 
 	free(buf);
 }
